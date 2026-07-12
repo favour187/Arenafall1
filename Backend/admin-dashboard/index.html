@@ -340,8 +340,7 @@ async function renderPlayers(el) {
   } else {
     tbody.innerHTML = `
       <tr><th>Rank</th><th>Username</th><th>Level</th><th>Wins</th><th>Kills</th><th>K/D</th><th>Actions</th></tr>
-      <tr><td><strong>#1</strong></td><td>Vanguard_Soldier</td><td>⭐ 24</td><td>15</td><td>180</td><td>3.45</td><td><button class="btn btn-sm btn-primary" onclick="showToast('Viewing Vanguard_Soldier')">View</button> <button class="btn btn-sm btn-danger" onclick="showBanModal('Vanguard_Soldier')">Ban</button></td></tr>
-      <tr><td><strong>#2</strong></td><td>Apex_Predator</td><td>⭐ 19</td><td>12</td><td>142</td><td>2.89</td><td><button class="btn btn-sm btn-primary" onclick="showToast('Viewing Apex_Predator')">View</button> <button class="btn btn-sm btn-danger" onclick="showBanModal('Apex_Predator')">Ban</button></td></tr>
+      <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:36px;">No players registered in database yet. Launch Unity client to register and populate leaderboard!</td></tr>
     `;
   }
 }
@@ -351,7 +350,7 @@ async function renderMatches(el) {
   el.innerHTML = `
     <h1 style="margin-bottom:16px;">🎮 Match History</h1>
     <div class="card">
-      <div class="card-header"><h2>Recent Matches</h2><span id="match-count"></span></div>
+      <div class="card-header"><h2>Recent Matches</h2><span id="match-count">0 matches</span></div>
       <div id="match-list">Loading...</div>
     </div>
   `;
@@ -376,13 +375,13 @@ async function renderMatches(el) {
       </table>
     `;
   } else {
-    document.getElementById('match-count').textContent = '2 matches';
+    document.getElementById('match-count').textContent = '0 matches';
     document.getElementById('match-list').innerHTML = `
       <table>
         <tr><th>Match ID</th><th>Mode</th><th>Map</th><th>Players</th><th>Duration</th><th>Ended</th><th></th></tr>
-        <tr><td><code>match_8091a7_br...</code></td><td><span class="badge cyan">solo</span></td><td>Nexus Tower</td><td>60</td><td>18m</td><td>${new Date().toLocaleTimeString()}</td><td><button class="btn btn-sm btn-cyan" onclick="showToast('Match details')">View</button></td></tr>
-        <tr><td><code>match_3914b2_br...</code></td><td><span class="badge orange">squads</span></td><td>Industrial Factory</td><td>56</td><td>22m</td><td>${new Date(Date.now() - 3600000).toLocaleTimeString()}</td><td><button class="btn btn-sm btn-cyan" onclick="showToast('Match details')">View</button></td></tr>
+        <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:36px;">No match sessions recorded yet. Start a match in Unity to generate real-time telemetry!</td></tr>
       </table>
+
     `;
   }
 }
@@ -577,15 +576,12 @@ async function renderReplays(el) {
   const replaysRes = await apiGet('/replays');
   const list = (replaysRes && !replaysRes.error && replaysRes.replays && replaysRes.replays.length > 0)
     ? replaysRes.replays
-    : [
-        { id: 'rep_nexus_tower_891', metadata: { mode: 'solo' }, actionCount: 1420, sizeKB: 4120, downloads: 14, recordedAt: new Date().toISOString() },
-        { id: 'rep_factory_complex_304', metadata: { mode: 'squads' }, actionCount: 3840, sizeKB: 8450, downloads: 32, recordedAt: new Date(Date.now()-86400000).toISOString() }
-      ];
+    : [];
 
   document.getElementById('r-total').textContent = list.length;
   document.getElementById('r-size').textContent = `${(list.reduce((a,b)=>a+(b.sizeKB||0),0)/1024).toFixed(1)} MB`;
 
-  document.getElementById('replay-list').innerHTML = `<table>
+  document.getElementById('replay-list').innerHTML = list.length > 0 ? `<table>
     <tr><th>Replay ID</th><th>Mode</th><th>Actions</th><th>Size</th><th>Downloads</th><th>Recorded</th><th></th></tr>
     ${list.map(r => `
       <tr>
@@ -598,7 +594,7 @@ async function renderReplays(el) {
         <td><button class="btn btn-sm btn-cyan" onclick="showToast('Viewing replay ${r.id}...')">View</button></td>
       </tr>
     `).join('')}
-  </table>`;
+  </table>` : '<p style="padding:32px;text-align:center;color:var(--text3);">No match replays recorded in database yet. Play a match in Unity to generate real-time replay telemetry!</p>';
 }
 
 // ─── SHOP ───────────────────────────────────────────────────────
@@ -680,22 +676,48 @@ async function renderShop(el) {
 // ─── REPORTS ────────────────────────────────────────────────────
 async function renderReports(el) {
   el.innerHTML = `
-    <h1 style="margin-bottom:16px;">🚨 Player Reports</h1>
+    <h1 style="margin-bottom:16px;">🚨 Player Reports & Anti-Cheat Feed</h1>
     <div class="stat-grid">
-      <div class="stat-card alert"><div class="label">Pending</div><div class="value">3</div></div>
-      <div class="stat-card"><div class="label">Resolved Today</div><div class="value">7</div></div>
-      <div class="stat-card"><div class="label">Total</div><div class="value">24</div></div>
+      <div class="stat-card alert"><div class="label">Pending Alerts</div><div class="value" id="rep-pending">0</div></div>
+      <div class="stat-card"><div class="label">Auto-Sanctioned Today</div><div class="value" id="rep-sanctioned">0</div></div>
+      <div class="stat-card"><div class="label">Total Monitored</div><div class="value" id="rep-total">0</div></div>
     </div>
     <div class="card">
-      <div class="card-header"><h2>Pending Reports</h2></div>
-      <table>
-        <tr><th>Reporter</th><th>Target</th><th>Reason</th><th>Date</th><th>Actions</th></tr>
-        <tr><td>Player_A</td><td><strong>Player_X</strong></td><td>Speed hacking</td><td>${new Date().toLocaleDateString()}</td><td><button class="btn btn-sm btn-primary" onclick="showToast('Banned Player_X')">Ban</button> <button class="btn btn-sm btn-cyan" onclick="showToast('Dismissed')">Dismiss</button></td></tr>
-        <tr><td>Player_B</td><td><strong>Player_Y</strong></td><td>Team killing</td><td>${new Date().toLocaleDateString()}</td><td><button class="btn btn-sm btn-primary" onclick="showToast('Banned Player_Y')">Ban</button> <button class="btn btn-sm btn-cyan" onclick="showToast('Dismissed')">Dismiss</button></td></tr>
-        <tr><td>Player_C</td><td><strong>Player_Z</strong></td><td>Exploiting</td><td>${new Date().toLocaleDateString()}</td><td><button class="btn btn-sm btn-primary" onclick="showToast('Banned Player_Z')">Ban</button> <button class="btn btn-sm btn-cyan" onclick="showToast('Dismissed')">Dismiss</button></td></tr>
-      </table>
+      <div class="card-header"><h2>Active Player Reports & Telemetry Violations</h2></div>
+      <div id="reports-table-container">Loading reports...</div>
     </div>
   `;
+
+  try {
+    const res = await apiGet('/supervision/status');
+    const inf = (res && res.data && res.data.activeInfractions) ? res.data.activeInfractions : [];
+    document.getElementById('rep-pending').textContent = inf.length;
+    document.getElementById('rep-sanctioned').textContent = res?.data?.autoSanctionsIssued || 0;
+    document.getElementById('rep-total').textContent = res?.data?.totalMatchesSupervised || 0;
+
+    const container = document.getElementById('reports-table-container');
+    if (inf.length === 0) {
+      container.innerHTML = '<p style="padding:36px;text-align:center;color:var(--text3);">No active anti-cheat infractions or player reports recorded. All sessions clean! ✨</p>';
+    } else {
+      container.innerHTML = `<table>
+        <tr><th>Timestamp</th><th>Player ID</th><th>Player Name</th><th>Violation Type</th><th>Details</th><th>Actions</th></tr>
+        ${inf.map(r => `
+          <tr>
+            <td>${new Date(r.timestamp).toLocaleTimeString()}</td>
+            <td><code>${r.playerId}</code></td>
+            <td><strong>${r.playerName}</strong></td>
+            <td><span class="badge red">${r.violationType}</span></td>
+            <td>${r.details}</td>
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="showBanModal('${r.playerName}')">Sanction</button>
+            </td>
+          </tr>
+        `).join('')}
+      </table>`;
+    }
+  } catch (e) {
+    document.getElementById('reports-table-container').innerHTML = '<p style="padding:36px;text-align:center;color:var(--text3);">No active anti-cheat infractions recorded.</p>';
+  }
 }
 
 // ─── SETTINGS ───────────────────────────────────────────────────

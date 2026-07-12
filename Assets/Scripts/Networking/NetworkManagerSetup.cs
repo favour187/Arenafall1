@@ -52,14 +52,16 @@ namespace ArenaFall.Networking
             _networkManager = netObj.AddComponent<NetworkManager>();
             _transport = netObj.AddComponent<UnityTransport>();
 
-            // Configure UnityTransport
+            // Configure UnityTransport with High-Capacity Buffers for 60-100 Player Lobbies
             _transport.SetConnectionData(_serverAddress, _serverPort);
+            _transport.MaxPacketQueueSize = 1024;
+            _transport.MaxPayloadSize = 6144;
             _networkManager.NetworkConfig = new NetworkConfig
             {
                 NetworkTransport = _transport,
                 PlayerPrefab = null, // Will be dynamically registered when needed
                 TickRate = 30,
-                ClientConnectionBufferTimeout = 10,
+                ClientConnectionBufferTimeout = 20,
                 EnableSceneManagement = true
             };
 

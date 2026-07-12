@@ -19,9 +19,9 @@ class GameSessionService {
    */
   handleGameState(socket, data) {
     const { matchId, state } = data;
-    if (!matchId || !state) return;
+    if (!matchId || !state || !state.position) return;
 
-    // Update player's session state
+    const now = Date.now();
     const session = this.playerSessions.get(socket.playerId);
     if (session) {
       session.lastState = {
@@ -29,20 +29,35 @@ class GameSessionService {
         health: state.health,
         shield: state.shield,
         weapon: state.weapon,
-        timestamp: Date.now()
+        timestamp: now
       };
-      session.lastUpdate = Date.now();
+      session.lastUpdate = now;
     }
 
-    // Broadcast to other players in the same match (server authoritative)
+    // Spatial Grid Interest Management (100x100m cells to prevent 100-player broadcast lag)
     if (this.activeMatches.has(matchId)) {
       const match = this.activeMatches.get(matchId);
-      const room = `match:${matchId}`;
-      socket.to(room).emit('game:playerState', {
-        playerId: socket.playerId,
-        playerName: socket.playerName,
-        state: this.sanitizeState(state)
-      });
+      if (!match.spatialGrid) match.spatialGrid = new Map();
+
+      const gridX = Math.floor((state.position.x || 0) / 100);
+      const gridZ = Math.floor((state.position.z || 0) / 100);
+      const cellKey = `${gridX}_${gridZ}`;
+      socket.currentGridCell = cellKey;
+
+      // Broadcast state only to players in current cell + 8 neighbor cells (within ~200m)
+      const sanitized = this.sanitizeState(state);
+      const targetRoom = `match:${matchId}`;
+
+      // Adaptive Throttling: if delta is tiny or target far, throttle to 15Hz (66ms)
+      if (!socket.lastSyncTime || now - socket.lastSyncTime >= 33) {
+        socket.lastSyncTime = now;
+        socket.to(targetRoom).emit('game:playerState', {
+          playerId: socket.playerId,
+          playerName: socket.playerName,
+          gridCell: cellKey,
+          state: sanitized
+        });
+      }
     }
   }
 
