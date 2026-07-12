@@ -152,6 +152,45 @@ namespace ArenaFall.Networking
             }
         }
 
+        // ─── INSTANT MOBILE & IOS GUEST LOGIN ──────────────────────
+        public void LoginAsGuest(Action<bool, string> onComplete)
+        {
+            StartCoroutine(LoginAsGuestCoroutine(onComplete));
+        }
+
+        private IEnumerator LoginAsGuestCoroutine(Action<bool, string> onComplete)
+        {
+            string url = $"{_baseUrl}/auth/guest";
+            using (UnityWebRequest req = CreatePostRequest(url, "{}"))
+            {
+                yield return req.SendWebRequest();
+
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    var response = JsonUtility.FromJson<AuthResponse>(req.downloadHandler.text);
+                    if (response != null && response.success)
+                    {
+                        SaveTokens(response.token, response.refreshToken);
+                        if (response.player != null) _cachedProfile = response.player;
+                        Debug.Log("[BackendClient] Guest login successful! Welcome " + (_cachedProfile?.playerName ?? "Guest"));
+                        onComplete?.Invoke(true, "Guest login successful!");
+                    }
+                    else
+                    {
+                        onComplete?.Invoke(false, response?.message ?? "Guest login failed.");
+                    }
+                }
+                else
+                {
+                    // Offline fallback if network fails
+                    _cachedProfile = new PlayerSaveData { playerId = "offline_guest", playerName = "Offline_Guest_77", level = 1, credits = 1500 };
+                    _isAuthenticated = true;
+                    Debug.Log("[BackendClient] Offline Guest fallback active.");
+                    onComplete?.Invoke(true, "Offline Guest login active!");
+                }
+            }
+        }
+
         // ─── PLAYER PROFILE & PROGRESSION ──────────────────────────
 
         public void FetchPlayerProfile(Action<PlayerSaveData> onComplete)

@@ -1019,16 +1019,16 @@ public class SceneAutoBuilder : MonoBehaviour
 
         var panel = CreatePanel(bg.transform, "LoginBox", new Color(0.1f, 0.15f, 0.25f, 0.8f),
             new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f));
-        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(360, 200);
+        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(380, 240);
 
         CreateText(panel.transform, "EmailLabel", "EMAIL: user@arenafall.com", 14, Color.white,
-            new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f));
+            new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f));
         CreateText(panel.transform, "PassLabel", "PASSWORD: **********", 14, Color.white,
-            new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f));
+            new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f));
 
         CreateMenuButton(panel.transform, "LoginButton", "LOGIN", 18, ButtonStyle.Primary,
-            new Vector2(0.28f, 0.25f), new Vector2(0.28f, 0.25f), new Vector2(0.28f, 0.25f), new Vector2(0.28f, 0.25f),
-            new Vector2(0, 0), new Vector2(140, 45), () => {
+            new Vector2(0.28f, 0.4f), new Vector2(0.28f, 0.4f), new Vector2(0.28f, 0.4f), new Vector2(0.28f, 0.4f),
+            new Vector2(0, 0), new Vector2(140, 42), () => {
                 if (BackendClient.Instance != null)
                 {
                     statusText.GetComponent<TextMeshProUGUI>().text = "Authenticating with authoritative backend...";
@@ -1041,11 +1041,25 @@ public class SceneAutoBuilder : MonoBehaviour
             });
 
         CreateMenuButton(panel.transform, "RegisterButton", "REGISTER", 18, ButtonStyle.Secondary,
-            new Vector2(0.72f, 0.25f), new Vector2(0.72f, 0.25f), new Vector2(0.72f, 0.25f), new Vector2(0.72f, 0.25f),
-            new Vector2(0, 0), new Vector2(140, 45), () => {
+            new Vector2(0.72f, 0.4f), new Vector2(0.72f, 0.4f), new Vector2(0.72f, 0.4f), new Vector2(0.72f, 0.4f),
+            new Vector2(0, 0), new Vector2(140, 42), () => {
                 if (BackendClient.Instance != null)
                 {
                     BackendClient.Instance.Register("user@arenafall.com", "Vanguard_Soldier", "password123", (success, msg) => {
+                        if (success) SceneManager.LoadScene("MainMenu");
+                        else statusText.GetComponent<TextMeshProUGUI>().text = msg;
+                    });
+                }
+                else SceneManager.LoadScene("MainMenu");
+            });
+
+        CreateMenuButton(panel.transform, "GuestButton", "⚡ PLAY AS GUEST (INSTANT MOBILE / IOS)", 15, ButtonStyle.Accent,
+            new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f),
+            new Vector2(0, 0), new Vector2(320, 42), () => {
+                if (BackendClient.Instance != null)
+                {
+                    statusText.GetComponent<TextMeshProUGUI>().text = "Starting instant mobile guest session...";
+                    BackendClient.Instance.LoginAsGuest((success, msg) => {
                         if (success) SceneManager.LoadScene("MainMenu");
                         else statusText.GetComponent<TextMeshProUGUI>().text = msg;
                     });

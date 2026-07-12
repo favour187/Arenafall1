@@ -89,6 +89,11 @@ namespace ArenaFall.UI.HUD
 
         private void InitializeHUD()
         {
+            if (GetComponent<MobileTouchControls>() == null)
+            {
+                gameObject.AddComponent<MobileTouchControls>();
+            }
+
             if (_interactionPanel != null)
                 _interactionPanel.SetActive(false);
 

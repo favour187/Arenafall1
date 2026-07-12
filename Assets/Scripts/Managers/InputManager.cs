@@ -32,6 +32,16 @@ namespace ArenaFall.Managers
         public float ScrollInput { get; private set; }
         public float Sensitivity { get; set; } = 5f;
 
+        // Public Mobile & Touch Setters
+        public void SetMoveInput(Vector2 input) { MoveInput = input; }
+        public void SetLookInput(Vector2 input) { LookInput = input; }
+        public void SetFiring(bool firing) { IsFiring = firing; }
+        public void SetAiming(bool aiming) { IsAiming = aiming; }
+        public void SetJumping(bool jumping) { IsJumping = jumping; }
+        public void SetReloading(bool reloading) { IsReloading = reloading; }
+        public void SetCrouching(bool crouching) { IsCrouching = crouching; }
+        public void TriggerInteract() { TriggerInteractEvent(); }
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

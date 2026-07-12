@@ -188,6 +188,61 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// ─── POST /guest (Instant Mobile & iOS Guest Login) ─────────────
+router.post('/guest', async (req, res) => {
+  try {
+    const guestId = `guest_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+    const guestName = `Guest_${Math.floor(Math.random()*9000)+1000}`;
+    const guestPlayer = {
+      playerId: guestId,
+      username: guestName.toLowerCase(),
+      displayName: guestName,
+      email: `${guestId}@guest.arenafall.local`,
+      level: 1,
+      credits: 1500,
+      premiumCurrency: 50,
+      isGuest: true,
+      ownedCharacters: ['vanguard'],
+      loadouts: [{ name: 'Default', character: 'vanguard', primaryWeapon: 'pc90_plasma_cannon', secondaryWeapon: 'p25_sidearm', melee: 'combat_knife', throwable: 'frag_grenade' }]
+    };
+
+    if (require('mongoose').connection.readyState !== 1) {
+      global.memoryStore.players.set(guestPlayer.email, guestPlayer);
+      const tokens = generateTokens(guestPlayer);
+      logger.info(`⚡ Mobile Guest Login (In-Memory): ${guestName}`);
+      return res.json({
+        success: true,
+        message: 'Guest login successful (In-Memory)',
+        player: sanitizePlayer(guestPlayer),
+        ...tokens
+      });
+    }
+
+    const player = new Player({
+      username: guestPlayer.username,
+      email: guestPlayer.email,
+      passwordHash: `guest_secret_${Date.now()}`,
+      displayName: guestName,
+      isGuest: true,
+      credits: 1500,
+      ownedCharacters: ['vanguard'],
+      loadouts: guestPlayer.loadouts
+    });
+    await player.save();
+    const tokens = generateTokens(player);
+    logger.info(`⚡ Mobile Guest Login (MongoDB): ${guestName}`);
+    res.status(201).json({
+      success: true,
+      message: 'Guest login successful',
+      player: sanitizePlayer(player),
+      ...tokens
+    });
+  } catch (err) {
+    logger.error('Guest login error:', err);
+    res.status(500).json({ success: false, error: 'Guest login failed', code: 'SERVER_ERROR' });
+  }
+});
+
 // ─── POST /refresh ──────────────────────────────────────────────
 router.post('/refresh', async (req, res) => {
   try {
