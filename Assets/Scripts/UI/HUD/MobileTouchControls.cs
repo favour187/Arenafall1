@@ -108,24 +108,33 @@ namespace ArenaFall.UI.HUD
         private void CreateTouchButton(string name, string label, Vector2 anchor, Vector2 pos, Vector2 size, Color color,
             UnityEngine.Events.UnityAction<BaseEventData> onDown, UnityEngine.Events.UnityAction<BaseEventData> onUp)
         {
+            // Outer Metallic Ring Frame
+            var frameObj = new GameObject(name + "_Frame");
+            frameObj.transform.SetParent(transform, false);
+            var frameRt = frameObj.AddComponent<RectTransform>();
+            frameRt.anchorMin = anchor; frameRt.anchorMax = anchor; frameRt.pivot = new Vector2(0.5f, 0.5f);
+            frameRt.anchoredPosition = pos; frameRt.sizeDelta = size + new Vector2(8, 8);
+            var frameImg = frameObj.AddComponent<Image>();
+            frameImg.color = new Color(color.r, color.g, color.b, 0.95f);
+
             var btnObj = new GameObject(name);
-            btnObj.transform.SetParent(transform, false);
+            btnObj.transform.SetParent(frameObj.transform, false);
             var rt = btnObj.AddComponent<RectTransform>();
-            rt.anchorMin = anchor; rt.anchorMax = anchor; rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = pos; rt.sizeDelta = size;
+            rt.anchorMin = new Vector2(0.5f, 0.5f); rt.anchorMax = new Vector2(0.5f, 0.5f); rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero; rt.sizeDelta = size;
             var img = btnObj.AddComponent<Image>();
-            img.color = color;
+            img.color = new Color(0.05f, 0.08f, 0.15f, 0.88f);
 
             var txtObj = new GameObject("Text");
             txtObj.transform.SetParent(btnObj.transform, false);
             var txtRt = txtObj.AddComponent<RectTransform>();
             txtRt.anchorMin = Vector2.zero; txtRt.anchorMax = Vector2.one; txtRt.offsetMin = Vector2.zero; txtRt.offsetMax = Vector2.zero;
             var txt = txtObj.AddComponent<TMPro.TextMeshProUGUI>();
-            txt.text = label; txt.fontSize = size.x > 90 ? 16 : 13; txt.color = Color.white; txt.alignment = TMPro.TextAlignmentOptions.Center;
+            txt.text = label; txt.fontSize = size.x > 90 ? 15 : 13; txt.color = Color.white; txt.fontStyle = TMPro.FontStyles.Bold; txt.alignment = TMPro.TextAlignmentOptions.Center;
 
-            var trigger = btnObj.AddComponent<EventTrigger>();
-            if (onDown != null) AddTrigger(trigger, EventTriggerType.PointerDown, onDown);
-            if (onUp != null) AddTrigger(trigger, EventTriggerType.PointerUp, onUp);
+            var trigger = frameObj.AddComponent<EventTrigger>();
+            AddTrigger(trigger, EventTriggerType.PointerDown, d => { frameObj.transform.localScale = new Vector3(0.91f, 0.91f, 1f); img.color = color; onDown?.Invoke(d); });
+            AddTrigger(trigger, EventTriggerType.PointerUp, d => { frameObj.transform.localScale = Vector3.one; img.color = new Color(0.05f, 0.08f, 0.15f, 0.88f); onUp?.Invoke(d); });
         }
 
         // ─── JOYSTICK HANDLERS ─────────────────────────────────────

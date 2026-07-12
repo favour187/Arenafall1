@@ -1389,63 +1389,76 @@ public class SceneAutoBuilder : MonoBehaviour
         var button = buttonObj.AddComponent<Button>();
         var rt = buttonObj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.pivot = pivotMin;
-        rt.anchoredPosition = position;
-        rt.sizeDelta = size;
+        rt.anchorMin = anchorMin; rt.anchorMax = anchorMax; rt.pivot = pivotMin;
+        rt.anchoredPosition = position; rt.sizeDelta = size;
 
-        // Style
+        // Try loading modern beveled button sprite
+        var uiBtnTex = Resources.Load<Texture2D>("UI/Sprites/ui_buttons");
+        if (uiBtnTex != null)
+        {
+            image.sprite = Sprite.Create(uiBtnTex, new Rect(0, 0, uiBtnTex.width, uiBtnTex.height), new Vector2(0.5f, 0.5f), 100f, 1, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
+            image.type = Image.Type.Sliced;
+        }
+
+        Color baseBg = new Color(0.06f, 0.12f, 0.22f, 0.94f);
+        Color neonColor = new Color(0f, 0.83f, 1f, 1f);
         switch (style)
         {
             case ButtonStyle.Primary:
-                image.color = new Color(1, 0.42f, 0.21f);
-                break;
-            case ButtonStyle.Secondary:
-                image.color = new Color(0, 0.2f, 0.3f);
-                break;
-            case ButtonStyle.Tertiary:
-                image.color = new Color(0.08f, 0.12f, 0.2f);
+                baseBg = new Color(0.18f, 0.08f, 0.05f, 0.95f);
+                neonColor = new Color(1f, 0.42f, 0.21f, 1f);
                 break;
             case ButtonStyle.Accent:
-                image.color = new Color(0, 0.5f, 0.7f);
+                baseBg = new Color(0.04f, 0.18f, 0.26f, 0.95f);
+                neonColor = new Color(0f, 0.83f, 1f, 1f);
                 break;
             case ButtonStyle.Danger:
-                image.color = new Color(0.5f, 0.1f, 0.1f);
+                baseBg = new Color(0.24f, 0.05f, 0.08f, 0.95f);
+                neonColor = new Color(1f, 0.14f, 0.27f, 1f);
                 break;
         }
+        image.color = baseBg;
+
+        // Glowing Neon Side Bar (Left Edge)
+        var neonObj = new GameObject("SideNeonStrip", typeof(RectTransform), typeof(CanvasRenderer));
+        neonObj.transform.SetParent(buttonObj.transform, false);
+        var nRt = neonObj.GetComponent<RectTransform>();
+        nRt.anchorMin = new Vector2(0, 0); nRt.anchorMax = new Vector2(0, 1);
+        nRt.offsetMin = Vector2.zero; nRt.offsetMax = Vector2.zero;
+        nRt.sizeDelta = new Vector2(5, 0); nRt.anchoredPosition = new Vector2(2.5f, 0);
+        var nImg = neonObj.AddComponent<Image>();
+        nImg.color = neonColor;
 
         // Text
         var textObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer));
         var tmp = textObj.AddComponent<TextMeshProUGUI>();
-        tmp.text = label;
-        tmp.fontSize = fontSize;
-        tmp.color = Color.white;
+        tmp.text = label; tmp.fontSize = fontSize; tmp.color = Color.white;
         tmp.alignment = TextAlignmentOptions.Center;
-        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent)
-            tmp.fontStyle = FontStyles.Bold;
+        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent) tmp.fontStyle = FontStyles.Bold;
         var trt = textObj.GetComponent<RectTransform>();
         trt.SetParent(buttonObj.transform, false);
-        trt.anchorMin = Vector2.zero;
-        trt.anchorMax = Vector2.one;
-        trt.sizeDelta = Vector2.zero;
-        trt.anchoredPosition = Vector2.zero;
+        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+        trt.sizeDelta = new Vector2(-12, 0); trt.anchoredPosition = new Vector2(4, 0);
 
-        // Click handler
-        if (onClick != null)
-        {
-            button.onClick.AddListener(onClick);
-        }
+        if (onClick != null) button.onClick.AddListener(onClick);
 
-        // Hover effects
-        var colors = button.colors;
-        colors.normalColor = image.color;
-        colors.highlightedColor = new Color(image.color.r * 1.2f, image.color.g * 1.2f, image.color.b * 1.2f, 1);
-        colors.pressedColor = new Color(image.color.r * 0.7f, image.color.g * 0.7f, image.color.b * 0.7f, 1);
-        colors.selectedColor = image.color;
-        colors.disabledColor = new Color(0.3f, 0.3f, 0.3f, 0.5f);
-        colors.fadeDuration = 0.1f;
-        button.colors = colors;
+        // Modern Tactile Scaling & Glow Animations
+        var trigger = buttonObj.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+        var enter = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter };
+        enter.callback.AddListener(_ => { buttonObj.transform.localScale = new Vector3(1.04f, 1.04f, 1f); nImg.color = Color.white; });
+        trigger.triggers.Add(enter);
+
+        var exit = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit };
+        exit.callback.AddListener(_ => { buttonObj.transform.localScale = Vector3.one; nImg.color = neonColor; });
+        trigger.triggers.Add(exit);
+
+        var down = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerDown };
+        down.callback.AddListener(_ => buttonObj.transform.localScale = new Vector3(0.96f, 0.96f, 1f));
+        trigger.triggers.Add(down);
+
+        var up = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerUp };
+        up.callback.AddListener(_ => buttonObj.transform.localScale = new Vector3(1.02f, 1.02f, 1f));
+        trigger.triggers.Add(up);
     }
 
     private void CreateSettingsSlider(Transform parent, string name, string label, float defaultValue, int index, Vector2 position)
