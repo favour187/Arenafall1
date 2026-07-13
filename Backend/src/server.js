@@ -34,8 +34,8 @@ const logger = createLogger({
 // ─── Config ────────────────────────────────────────────────────
 const config = {
   port: parseInt(process.env.PORT) || 3000,
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/arenafall',
-  redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+  mongoUri: process.env.MONGODB_URI || process.env.MONGO_URI || process.env.MONGO_URL || process.env.DATABASE_URL || process.env.DB_URI || process.env.MONGODB_URL || 'mongodb://localhost:27017/arenafall',
+  redisUrl: process.env.REDIS_URL || process.env.REDIS_URI || process.env.REDIS || 'redis://localhost:6379',
   jwtSecret: process.env.JWT_SECRET || 'arenafall-dev-secret-key-2024',
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'arenafall-refresh-secret',
   jwtExpiry: process.env.JWT_EXPIRY || '24h',
@@ -88,18 +88,22 @@ const io = new Server(server, {
 // ─── Database Connections ──────────────────────────────────────
 let dbConnected = false;
 let redisClient = null;
+global.mongoLastError = null;
 
 async function connectDatabases() {
   try {
     await mongoose.connect(config.mongoUri, {
       maxPoolSize: 50,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 8000,
       heartbeatFrequencyMS: 10000
     });
     dbConnected = true;
+    global.mongoLastError = null;
     logger.info('✅ MongoDB connected');
   } catch (err) {
-    logger.warn('⚠️ MongoDB connection failed (server will run without DB): ' + err.message);
+    dbConnected = false;
+    global.mongoLastError = err.message;
+    logger.warn('⚠️ MongoDB connection failed (server running authoritatively in memory without DB): ' + err.message);
   }
 
   try {
@@ -128,6 +132,7 @@ const healthHandler = (req, res) => {
     timestamp: new Date().toISOString(),
     services: {
       database: dbConnected ? 'connected' : 'disconnected',
+      mongoError: dbConnected ? null : (global.mongoLastError || 'Check MONGODB_URI or MongoDB Atlas IP Whitelist (0.0.0.0/0)'),
       redis: redisClient?.status === 'ready' ? 'connected' : 'disconnected'
     },
     game: 'Arena Fall Battle Royale'
