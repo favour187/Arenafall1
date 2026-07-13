@@ -3,6 +3,7 @@ using UnityEngine.AI;
 using ArenaFall.Core;
 using ArenaFall.Gameplay.Characters;
 using ArenaFall.Gameplay.Weapons;
+using ArenaFall.Gameplay.Inventory;
 using ArenaFall.Interfaces;
 using ArenaFall.Utilities;
 

@@ -5,6 +5,7 @@ using ArenaFall.Core;
 using ArenaFall.Data;
 using ArenaFall.Events;
 using ArenaFall.Interfaces;
+using ArenaFall.Gameplay.Characters;
 
 namespace ArenaFall.Gameplay.Inventory
 {

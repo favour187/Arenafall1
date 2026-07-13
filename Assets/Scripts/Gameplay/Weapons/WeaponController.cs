@@ -87,8 +87,8 @@ namespace ArenaFall.Gameplay.Weapons
                 if (_input.IsFiring && !_isFiring) StartFire();
                 else if (!_input.IsFiring && _isFiring) StopFire();
 
-                if (_input.IsAiming && !_isAiming) SetAiming(true);
-                else if (!_input.IsAiming && _isAiming) SetAiming(false);
+                if (_input.IsAiming && !_isAiming) { StartAim(); if (CameraManager.Instance != null) CameraManager.Instance.SetAiming(true); }
+                else if (!_input.IsAiming && _isAiming) { StopAim(); if (CameraManager.Instance != null) CameraManager.Instance.SetAiming(false); }
 
                 if (_input.IsReloading && !_isReloading) Reload();
             }

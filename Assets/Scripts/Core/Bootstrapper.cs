@@ -15,7 +15,7 @@ namespace ArenaFall.Core
         [SerializeField] private GameObject[] _uiManagerPrefabs;
 
         [Header("Configuration")]
-        [SerializeField] private bool _initializeOnAwake = true;
+        [SerializeField] public bool _initializeOnAwake = true;
         [SerializeField] private int _targetFrameRate = 60;
         [SerializeField] private bool _vsyncEnabled = false;
 

@@ -8,17 +8,24 @@ namespace ArenaFall.Data
     /// All weapon stats are defined here and referenced by weapon controllers.
     /// </summary>
     [CreateAssetMenu(fileName = "NewWeapon", menuName = "Arena Fall/Weapons/Weapon Data")]
-    public class WeaponData : ScriptableObject
+    public class WeaponData : ItemData
     {
-        [Header("General")]
+        [Header("Weapon General")]
         public string weaponId;
         public string weaponName;
-        [TextArea] public string description;
-        public WeaponCategory category;
-        public ItemRarity rarity;
-        public Sprite icon;
+        [TextArea] public new string description;
+        public WeaponCategory weaponCategory;
+        public new ItemRarity rarity;
+        public new Sprite icon;
         public GameObject weaponPrefab;
-        public GameObject pickupPrefab;
+        public new GameObject pickupPrefab;
+
+        private void OnEnable()
+        {
+            if (string.IsNullOrEmpty(itemId)) itemId = weaponId;
+            if (string.IsNullOrEmpty(itemName)) itemName = weaponName;
+            category = ItemCategory.Weapon;
+        }
 
         [Header("Damage")]
         public float baseDamage = 30f;

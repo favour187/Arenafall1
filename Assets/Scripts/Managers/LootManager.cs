@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using ArenaFall.Core;
 using ArenaFall.Data;
+using ArenaFall.Gameplay.Inventory;
 
 namespace ArenaFall.Managers
 {

@@ -5,6 +5,7 @@ using TMPro;
 using System.Collections.Generic;
 using System.Linq;
 using ArenaFall.Core;
+using ArenaFall.Data;
 using ArenaFall.Managers;
 using ArenaFall.UI.MainMenu;
 using ArenaFall.UI.HUD;
@@ -410,7 +411,7 @@ public class SceneAutoBuilder : MonoBehaviour
         var weaponObj = new GameObject("EquippedWeapon");
         weaponObj.transform.SetParent(playerObj.transform);
         var wc = weaponObj.AddComponent<WeaponController>();
-        var wData = ScriptableObject.CreateInstance<Data.WeaponData>();
+        var wData = ScriptableObject.CreateInstance<WeaponData>();
         wData.weaponId = "pc90_plasma_cannon";
         wData.weaponName = "PC-90 Plasma Cannon";
         wData.damage = 38f;
@@ -1344,7 +1345,7 @@ public class SceneAutoBuilder : MonoBehaviour
         // Map common UI names to your actual AI art filenames
         string artPath = assetName switch
         {
-            "Logo" or "SplashBG" => "UI/Sprites/arena_fall_logo",
+            "Logo" => "UI/Sprites/arena_fall_logo",
             "SplashBG" => "UI/Sprites/splash_screen",
             "MinimapBorder" => "UI/Sprites/modern_br_hud",
             "BGEffects" or "Background" => "Art/Environment/skybox_concept",

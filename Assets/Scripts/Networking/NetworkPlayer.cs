@@ -22,13 +22,13 @@ namespace ArenaFall.Networking
         [SerializeField] private float _syncRotationRate = 0.1f;
 
         // Network variables
-        private NetworkVariable<Vector3> _netPosition = new(WritableState.Server);
-        private NetworkVariable<Vector2> _netRotation = new(WritableState.Server);
-        private NetworkVariable<float> _netHealth = new(WritableState.Server);
-        private NetworkVariable<float> _netShield = new(WritableState.Server);
-        private NetworkVariable<bool> _netIsAlive = new(WritableState.Server, true);
-        private NetworkVariable<int> _netTeamId = new(WritableState.Server);
-        private NetworkVariable<FixedString32Bytes> _netPlayerName = new(WritableState.Server);
+        private NetworkVariable<Vector3> _netPosition = new NetworkVariable<Vector3>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<Vector2> _netRotation = new NetworkVariable<Vector2>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<float> _netHealth = new NetworkVariable<float>(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<float> _netShield = new NetworkVariable<float>(0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<bool> _netIsAlive = new NetworkVariable<bool>(true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<int> _netTeamId = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        private NetworkVariable<FixedString32Bytes> _netPlayerName = new NetworkVariable<FixedString32Bytes>("Player", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
         // Components
         private CharacterHealth _health;

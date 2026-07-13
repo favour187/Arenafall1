@@ -7,6 +7,10 @@ using System.Linq;
 using System.Collections.Generic;
 using ArenaFall.Data;
 using ArenaFall.Interfaces;
+using ArenaFall.Gameplay.Inventory;
+using ArenaFall.Gameplay.Characters;
+using ArenaFall.Gameplay.Weapons;
+using ArenaFall.Events;
 
 /// <summary>
 /// Arena Fall - One-Click Project Setup Wizard
