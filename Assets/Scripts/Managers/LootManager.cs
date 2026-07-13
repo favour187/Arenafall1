@@ -112,7 +112,7 @@ namespace ArenaFall.Managers
 
             // Create loot instance
             GameObject lootObj = Instantiate(_lootItemPrefab, spawnPoint.position, Quaternion.identity);
-            var lootItem = lootObj.GetComponent<Inventory.LootItem>();
+            var lootItem = lootObj.GetComponent<LootItem>();
             
             if (lootItem != null)
             {

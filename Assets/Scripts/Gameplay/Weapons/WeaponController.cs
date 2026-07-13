@@ -382,6 +382,20 @@ namespace ArenaFall.Gameplay.Weapons
         }
 
         /// <summary>
+        /// Equip the weapon with specific data.
+        /// </summary>
+        public void Equip(WeaponData data)
+        {
+            _weaponData = data;
+            if (_weaponData != null)
+            {
+                _currentAmmo = _weaponData.magazineSize;
+                _reserveAmmo = _weaponData.maxReserveAmmo;
+            }
+            Equip();
+        }
+
+        /// <summary>
         /// Equip the weapon.
         /// </summary>
         public void Equip()

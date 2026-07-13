@@ -414,7 +414,7 @@ public class SceneAutoBuilder : MonoBehaviour
         var wData = ScriptableObject.CreateInstance<WeaponData>();
         wData.weaponId = "pc90_plasma_cannon";
         wData.weaponName = "PC-90 Plasma Cannon";
-        wData.damage = 38f;
+        wData.baseDamage = 38f;
         wData.magazineSize = 30;
         wData.maxReserveAmmo = 180;
         wc.Equip(wData);
