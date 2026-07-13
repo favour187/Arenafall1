@@ -114,6 +114,14 @@ public class SceneAutoBuilder : MonoBehaviour
     // ─── BOOT SCENE ────────────────────────────────────────────
     private void BuildBootScene(Scene scene)
     {
+        var bootCamObj = new GameObject("[AUTO] BootCamera");
+        var bootCam = bootCamObj.AddComponent<Camera>();
+        bootCam.clearFlags = CameraClearFlags.SolidColor;
+        bootCam.backgroundColor = new Color(0.039f, 0.086f, 0.157f, 1f);
+        bootCamObj.tag = "MainCamera";
+        bootCamObj.AddComponent<AudioListener>();
+        SceneManager.MoveGameObjectToScene(bootCamObj, scene);
+
         var bootObj = new GameObject("[AUTO] Boot Systems");
         bootObj.AddComponent<Bootstrapper>()._initializeOnAwake = true;
         
@@ -1292,6 +1300,17 @@ public class SceneAutoBuilder : MonoBehaviour
 
     private GameObject CreateCanvas(Scene scene, string name, int sortOrder)
     {
+        if (Camera.main == null && FindObjectOfType<Camera>() == null)
+        {
+            var camObj = new GameObject("[AUTO] UICamera");
+            var cam = camObj.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = new Color(0.039f, 0.086f, 0.157f, 1f);
+            camObj.tag = "MainCamera";
+            if (FindObjectOfType<AudioListener>() == null) camObj.AddComponent<AudioListener>();
+            SceneManager.MoveGameObjectToScene(camObj, scene);
+        }
+
         var obj = new GameObject($"[AUTO] {name}", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
         var canvas = obj.GetComponent<Canvas>();
         canvas.sortingOrder = sortOrder;
