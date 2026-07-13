@@ -30,6 +30,7 @@ namespace ArenaFall.Networking
         public string AuthToken => _authToken;
         public bool IsAuthenticated => _isAuthenticated;
         public PlayerSaveData CachedProfile => _cachedProfile;
+        public int LastMatchBotCount { get; set; } = 59;
 
         private void Awake()
         {
@@ -264,6 +265,8 @@ namespace ArenaFall.Networking
                 if (req.result == UnityWebRequest.Result.Success)
                 {
                     var status = JsonUtility.FromJson<MatchmakingStatus>(req.downloadHandler.text);
+                    if (status != null && status.botCount > 0) LastMatchBotCount = status.botCount;
+                    else LastMatchBotCount = 59;
                     onStatusUpdate?.Invoke(true, status);
                 }
                 else
@@ -342,6 +345,9 @@ namespace ArenaFall.Networking
             public string matchId;
             public string serverIp;
             public int serverPort;
+            public int playerCount;
+            public int humanCount;
+            public int botCount;
             public string message;
         }
     }

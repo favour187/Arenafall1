@@ -195,9 +195,9 @@ namespace ArenaFall.Core
         }
 
         // ─── 3. AI BOTS WITH 3D SCI-FI RIGS ─────────────────────────
-        public static void Spawn3DAIBotsAcrossCompounds()
+        public static void Spawn3DAIBotsAcrossCompounds(int count = 59)
         {
-            Debug.Log("[3DCharacterAndVehicleBuilder] Spawning 20 3D AI Bots across the 6 Compound POIs...");
+            Debug.Log($"[3DCharacterAndVehicleBuilder] Spawning {count} 3D AI Bots across all 7 Compound POIs to reach 60-player lobby fill...");
             PreloadArtAssets();
 
             Vector3[] compoundCenters = {
@@ -206,13 +206,14 @@ namespace ArenaFall.Core
                 new Vector3(3200, 2, 800),  // Hydro Station
                 new Vector3(800, 2, 3200),  // Frost Depots
                 new Vector3(800, 2, 800),   // Solar Fields
-                new Vector3(600, 2, 2000)   // Crash Site
+                new Vector3(600, 2, 2000),  // Crash Site
+                new Vector3(2000, 2, 3200)  // Orbital Relay Station
             };
 
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < count; i++)
             {
                 Vector3 center = compoundCenters[i % compoundCenters.Length];
-                Vector3 spawnPos = center + new Vector3(Random.Range(-40f, 40f), 1f, Random.Range(-40f, 40f));
+                Vector3 spawnPos = center + new Vector3(Random.Range(-55f, 55f), 1f, Random.Range(-55f, 55f));
 
                 var botObj = new GameObject($"[AI_BOT] Elite_Patrol_{i}");
                 botObj.transform.position = spawnPos;
@@ -228,10 +229,10 @@ namespace ArenaFall.Core
                 Color botColor = (i % 2 == 0) ? new Color(0.7f, 0.2f, 0.2f) : new Color(0.8f, 0.4f, 0.1f);
                 Build3DSciFiCharacterRig(botObj.transform, "Bot3DRig", false, botColor);
 
-                // Add AIController so they patrol and engage
-                // botObj.AddComponent<AIController>();
+                // Attach AIController so bots actively patrol, aim, and engage
+                botObj.AddComponent<Gameplay.AI.AIController>();
             }
-            Debug.Log("[3DCharacterAndVehicleBuilder] ✓ 20 3D AI Bots active across compounds.");
+            Debug.Log($"[3DCharacterAndVehicleBuilder] ✓ {count} 3D AI Bots active across all 7 compounds.");
         }
     }
 }

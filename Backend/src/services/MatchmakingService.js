@@ -88,54 +88,84 @@ class MatchmakingService {
    */
   processQueues() {
     for (const [mode, queue] of Object.entries(this.queues)) {
-      if (queue.length < 2) continue; // Need at least 2 players
+      if (queue.length < 1) continue; // Need at least 1 waiting player
 
       const teamSize = mode === 'solo' ? 1 : mode === 'duos' ? 2 : 4;
-      const minPlayers = Math.max(10, this.MAX_PLAYERS / 4);
-
-      // Check timeout - start match even with fewer players after timeout
       const oldestEntry = queue[0];
-      const queueAge = oldestEntry ? (Date.now() - oldestEntry.joinTime) / 1000 : 0;
-      const forceStart = queueAge > this.MATCH_TIMEOUT && queue.length >= minPlayers;
-
-      if (queue.length >= this.MAX_PLAYERS || forceStart) {
+      const queueAgeSec = oldestEntry ? (Date.now() - oldestEntry.joinTime) / 1000 : 0;
+      
+      // Force start with bot fill when 5-min timer (or configured timeout) is reached, or when full
+      const timeoutReached = queueAgeSec >= Math.min(300, this.MATCH_TIMEOUT);
+      if (queue.length >= this.MAX_PLAYERS || timeoutReached) {
         this.createMatch(mode, queue, teamSize);
       }
     }
   }
 
   /**
-   * Create a match from queued players
+   * Create a match from queued players, filling remaining slots up to 60 with AI Bots.
    */
   createMatch(mode, queue, teamSize) {
     const matchId = `match_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-    const players = queue.splice(0, Math.min(queue.length, this.MAX_PLAYERS));
+    const humanPlayers = queue.splice(0, Math.min(queue.length, this.MAX_PLAYERS));
     const serverUrl = this.selectGameServer();
 
-    // Assign teams
-    const teams = this.assignTeams(players, teamSize);
+    // Generate AI Bots to fill up remaining slots to reach exactly MAX_PLAYERS (60)
+    const neededBots = Math.max(0, this.MAX_PLAYERS - humanPlayers.length);
+    const bots = [];
+    for (let i = 0; i < neededBots; i++) {
+      bots.push({
+        playerId: `bot_${matchId}_${i}`,
+        playerName: `Apex_AI_${Math.floor(Math.random()*9000)+1000}`,
+        ping: 12,
+        mmr: 1100,
+        isBot: true
+      });
+    }
 
-    // Notify players
-    for (const player of players) {
+    const allCombatants = [...humanPlayers, ...bots];
+    const teams = this.assignTeams(allCombatants, teamSize);
+
+    // Notify human players
+    for (const player of humanPlayers) {
       const socket = this.getSocketById(player.socketId);
       if (socket) {
         socket.emit('match:found', {
           matchId,
           serverUrl,
           mode,
-          players: players.map(p => ({
+          playerCount: allCombatants.length,
+          humanCount: humanPlayers.length,
+          botCount: neededBots,
+          players: allCombatants.map(p => ({
             playerId: p.playerId,
             playerName: p.playerName,
-            ping: p.ping
+            ping: p.ping,
+            isBot: !!p.isBot
           })),
           team: teams.find(t => t.includes(player.playerId)) || [player.playerId],
-          countdown: 10
+          countdown: 5
         });
         socket.leave(`queue:${mode}`);
       }
     }
 
-    this.logger.info(`🎮 Match created: ${matchId} (${mode}) - ${players.length} players`);
+    // Register active session in global memory store & supervision
+    if (global.memoryStore && Array.isArray(global.memoryStore.matches)) {
+      global.memoryStore.matches.unshift({
+        matchId,
+        mode,
+        map: 'Orbital Relay Station',
+        playerCount: allCombatants.length,
+        humanCount: humanPlayers.length,
+        botCount: neededBots,
+        duration: 0,
+        endedAt: new Date().toISOString()
+      });
+      if (global.memoryStore.matches.length > 50) global.memoryStore.matches.pop();
+    }
+
+    this.logger.info(`🎮 Match created: ${matchId} (${mode}) - ${humanPlayers.length} humans + ${neededBots} bots paired (Total: ${allCombatants.length})`);
     return matchId;
   }
 

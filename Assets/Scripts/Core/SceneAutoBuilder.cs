@@ -976,7 +976,12 @@ public class SceneAutoBuilder : MonoBehaviour
     // ─── AI BOTS ──────────────────────────────────────────────
     private void SpawnAIBots()
     {
-        3DCharacterAndVehicleBuilder.Spawn3DAIBotsAcrossCompounds();
+        int botCount = 59; // Default 59 bots + 1 human = 60 player lobby
+        if (BackendClient.Instance != null && BackendClient.Instance.LastMatchBotCount > 0)
+        {
+            botCount = BackendClient.Instance.LastMatchBotCount;
+        }
+        3DCharacterAndVehicleBuilder.Spawn3DAIBotsAcrossCompounds(botCount);
     }
 
     // ─── LOOT & VEHICLES ──────────────────────────────────────
