@@ -10,7 +10,7 @@ namespace ArenaFall.Core
     /// Constructs 3D Compound Sci-Fi Character Rigs & Drivable Physics Vehicles.
     /// Replaces 2D billboards with articulated armor, backpacks, glowing visors, and drivable rigs.
     /// </summary>
-    public class 3DCharacterAndVehicleBuilder : MonoBehaviour
+    public class SciFiCharacterAndVehicleBuilder : MonoBehaviour
     {
         private static Dictionary<string, Texture2D> _artCache = new();
 
@@ -108,7 +108,7 @@ namespace ArenaFall.Core
         // ─── 2. DRIVABLE VEHICLE SPAWNER ────────────────────────────
         public static void SpawnDrivableVehiclesAcrossMap()
         {
-            Debug.Log("[3DCharacterAndVehicleBuilder] Spawning Drivable Physics Vehicles across Compound Garages...");
+            Debug.Log("[SciFiCharacterAndVehicleBuilder] Spawning Drivable Physics Vehicles across Compound Garages...");
             PreloadArtAssets();
 
             // Spawn Ranger ATV at Solar Fields
@@ -126,7 +126,7 @@ namespace ArenaFall.Core
             // Spawn 5th Heavy Drivable Vehicle: Armored Mech Walker at Orbital Relay Station
             SpawnVehicle("Armored Mech Walker", "armored_mech_walker", new Vector3(2000, 2, 3150), new Vector3(2.8f, 3.6f, 3.2f), new Color(0.12f, 0.2f, 0.35f));
 
-            Debug.Log("[3DCharacterAndVehicleBuilder] ✓ 5 Drivable Vehicles (including Armored Mech Walker) active.");
+            Debug.Log("[SciFiCharacterAndVehicleBuilder] ✓ 5 Drivable Vehicles (including Armored Mech Walker) active.");
         }
 
         private static GameObject SpawnVehicle(string vehicleName, string textureKey, Vector3 position, Vector3 size, Color chassisColor)
@@ -197,7 +197,7 @@ namespace ArenaFall.Core
         // ─── 3. AI BOTS WITH 3D SCI-FI RIGS ─────────────────────────
         public static void Spawn3DAIBotsAcrossCompounds(int count = 59)
         {
-            Debug.Log($"[3DCharacterAndVehicleBuilder] Spawning {count} 3D AI Bots across all 7 Compound POIs to reach 60-player lobby fill...");
+            Debug.Log($"[SciFiCharacterAndVehicleBuilder] Spawning {count} 3D AI Bots across all 7 Compound POIs to reach 60-player lobby fill...");
             PreloadArtAssets();
 
             Vector3[] compoundCenters = {
@@ -232,7 +232,7 @@ namespace ArenaFall.Core
                 // Attach AIController so bots actively patrol, aim, and engage
                 botObj.AddComponent<Gameplay.AI.AIController>();
             }
-            Debug.Log($"[3DCharacterAndVehicleBuilder] ✓ {count} 3D AI Bots active across all 7 compounds.");
+            Debug.Log($"[SciFiCharacterAndVehicleBuilder] ✓ {count} 3D AI Bots active across all 7 compounds.");
         }
     }
 }

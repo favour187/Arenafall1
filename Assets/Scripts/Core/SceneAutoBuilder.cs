@@ -404,7 +404,7 @@ public class SceneAutoBuilder : MonoBehaviour
         var inventory = playerObj.AddComponent<Inventory>();
 
         // Build 3D Character Rig for Player with glowing cyan visor & armor vest
-        3DCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "Player3DRig", true, new Color(0f, 0.83f, 1f));
+        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "Player3DRig", true, new Color(0f, 0.83f, 1f));
 
         // Equip starting weapon (`pc90_plasma_cannon` or `a17_striker`)
         var weaponObj = new GameObject("EquippedWeapon");
@@ -756,7 +756,7 @@ public class SceneAutoBuilder : MonoBehaviour
         playerObj.AddComponent<Inventory>();
         
         // Build 3D Character Rig for Player in Training
-        3DCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "PlayerTraining3DRig", true, new Color(0f, 0.83f, 1f));
+        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "PlayerTraining3DRig", true, new Color(0f, 0.83f, 1f));
         
         // Target Dummies with 3D Rigs
         for (int i = 0; i < 5; i++)
@@ -767,7 +767,7 @@ public class SceneAutoBuilder : MonoBehaviour
             
             var targetHealth = dummy.AddComponent<CharacterHealth>();
             Color dummyColor = i % 2 == 0 ? new Color(0.8f, 0.2f, 0.2f) : new Color(0.9f, 0.5f, 0.1f);
-            3DCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(dummy.transform, $"DummyRig_{i}", false, dummyColor);
+            SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(dummy.transform, $"DummyRig_{i}", false, dummyColor);
             
             dummy.AddComponent<RotateAnimation>();
         }
@@ -981,13 +981,13 @@ public class SceneAutoBuilder : MonoBehaviour
         {
             botCount = BackendClient.Instance.LastMatchBotCount;
         }
-        3DCharacterAndVehicleBuilder.Spawn3DAIBotsAcrossCompounds(botCount);
+        SciFiCharacterAndVehicleBuilder.Spawn3DAIBotsAcrossCompounds(botCount);
     }
 
     // ─── LOOT & VEHICLES ──────────────────────────────────────
     private void SpawnLoot()
     {
-        3DCharacterAndVehicleBuilder.SpawnDrivableVehiclesAcrossMap();
+        SciFiCharacterAndVehicleBuilder.SpawnDrivableVehiclesAcrossMap();
     }
 
     // ─── LOGIN & REGISTRATION ──────────────────────────────────
@@ -1125,7 +1125,7 @@ public class SceneAutoBuilder : MonoBehaviour
         var charObj = new GameObject("InspectionCharacter");
         charObj.transform.position = new Vector3(0, 0.1f, 3.5f);
         charObj.transform.rotation = Quaternion.Euler(0, 180, 0);
-        3DCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(charObj.transform, "InspectRig", true, new Color(0f, 0.83f, 1f));
+        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(charObj.transform, "InspectRig", true, new Color(0f, 0.83f, 1f));
 
         // Inspection Camera
         var camObj = new GameObject("InspectionCamera");
