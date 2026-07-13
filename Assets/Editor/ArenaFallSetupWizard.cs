@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using ArenaFall.Data;
+using ArenaFall.Interfaces;
 
 /// <summary>
 /// Arena Fall - One-Click Project Setup Wizard

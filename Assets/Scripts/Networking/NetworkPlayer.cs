@@ -3,6 +3,7 @@ using Unity.Netcode;
 using Unity.Collections;
 using ArenaFall.Core;
 using ArenaFall.Events;
+using ArenaFall.Interfaces;
 using ArenaFall.Gameplay.Characters;
 using ArenaFall.Managers;
 
