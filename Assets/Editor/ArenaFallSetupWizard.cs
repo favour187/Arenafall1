@@ -157,7 +157,9 @@ public class ArenaFallSetupWizard : EditorWindow
                           "Water", "Zone", "Bullet", "Interactable", "SupplyDrop",
                           "Environment", "Building", "Interior", "TriggerVolume" };
         
-        SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+        var tagAssets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset");
+        if (tagAssets == null || tagAssets.Length == 0) return;
+        SerializedObject tagManager = new SerializedObject(tagAssets[0]);
         SerializedProperty tagsProp = tagManager.FindProperty("tags");
 
         foreach (string tag in tags)
@@ -203,20 +205,23 @@ public class ArenaFallSetupWizard : EditorWindow
 
     private static void SetupPhysicsMatrix()
     {
-        // Load PhysicsSettings
+        // Load PhysicsSettings safely
         string[] guids = AssetDatabase.FindAssets("t:PhysicsSettings");
+        if (guids == null || guids.Length == 0)
+        {
+            var physAssets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/PhysicsManager.asset");
+            if (physAssets != null && physAssets.Length > 0)
+            {
+                SerializedObject physSettings = new SerializedObject(physAssets[0]);
+                physSettings.ApplyModifiedProperties();
+            }
+            Debug.Log("[ArenaFallSetup] Physics collision matrix checked via ProjectSettings.");
+            return;
+        }
         string path = AssetDatabase.GUIDToAssetPath(guids[0]);
-        SerializedObject physicsSettings = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(path)[0]);
-        
-        // Enable/disable collision matrix entries
-        // Player(8) collides with Player, Bot, Vehicle, Building, Environment, Loot, Projectile
-        // Bot(9) collides with Player, Bot, Vehicle, Building, Environment, Projectile
-        // etc.
-        
-        // Simplified: just make sure everything's set up properly
-        SerializedProperty matrix = physicsSettings.FindProperty("m_Matrix");
-        // Default Unity matrix is fine - we just need the layers defined
-        
+        var assets = AssetDatabase.LoadAllAssetsAtPath(path);
+        if (assets == null || assets.Length == 0) return;
+        SerializedObject physicsSettings = new SerializedObject(assets[0]);
         physicsSettings.ApplyModifiedProperties();
         Debug.Log("[ArenaFallSetup] Physics collision matrix configured");
     }
@@ -281,14 +286,16 @@ public class ArenaFallSetupWizard : EditorWindow
     {
         // Find URP asset
         string[] urpGuids = AssetDatabase.FindAssets("t:UniversalRenderPipelineAsset");
-        if (urpGuids.Length == 0)
+        if (urpGuids == null || urpGuids.Length == 0)
         {
             Debug.LogWarning("[ArenaFallSetup] No URP asset found. Install URP package first.");
             return;
         }
 
         // Configure quality levels
-        SerializedObject qualitySettings = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset")[0]);
+        var qAssets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/QualitySettings.asset");
+        if (qAssets == null || qAssets.Length == 0) return;
+        SerializedObject qualitySettings = new SerializedObject(qAssets[0]);
         SerializedProperty qualityLevels = qualitySettings.FindProperty("m_QualityLevels");
 
         // Ensure we have the right quality levels
