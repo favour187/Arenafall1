@@ -24,6 +24,14 @@ public class SceneAutoBuilder : MonoBehaviour
     private static bool _initialized;
     private Dictionary<string, Sprite> _spriteCache = new();
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void AutoInitOnPlay()
+    {
+        if (_initialized) return;
+        var builderObj = new GameObject("[AUTO] SceneAutoBuilder");
+        builderObj.AddComponent<SceneAutoBuilder>();
+    }
+
     private void Awake()
     {
         if (_initialized) return;
