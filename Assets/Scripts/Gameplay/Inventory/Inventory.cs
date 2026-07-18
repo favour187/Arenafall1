@@ -5,6 +5,7 @@ using ArenaFall.Core;
 using ArenaFall.Data;
 using ArenaFall.Events;
 using ArenaFall.Interfaces;
+using ArenaFall.Utilities;
 using ArenaFall.Gameplay.Characters;
 
 namespace ArenaFall.Gameplay.Inventory
@@ -104,7 +105,7 @@ namespace ArenaFall.Gameplay.Inventory
                     OnInventoryChanged?.Invoke();
                     EventBus.Raise(new InventoryChangedEvent
                     {
-                        PlayerId = gameObject.GetInstanceID().ToString(),
+                        PlayerId = UnityObjectId.ToString(gameObject),
                         ItemId = item.ItemId,
                         ChangeType = InventoryChangeType.Added,
                         Amount = added
@@ -124,7 +125,7 @@ namespace ArenaFall.Gameplay.Inventory
                     OnInventoryChanged?.Invoke();
                     EventBus.Raise(new InventoryChangedEvent
                     {
-                        PlayerId = gameObject.GetInstanceID().ToString(),
+                        PlayerId = UnityObjectId.ToString(gameObject),
                         ItemId = item.ItemId,
                         ChangeType = InventoryChangeType.Added,
                         Amount = 1
@@ -147,7 +148,7 @@ namespace ArenaFall.Gameplay.Inventory
                     OnInventoryChanged?.Invoke();
                     EventBus.Raise(new InventoryChangedEvent
                     {
-                        PlayerId = gameObject.GetInstanceID().ToString(),
+                        PlayerId = UnityObjectId.ToString(gameObject),
                         ItemId = item.ItemId,
                         ChangeType = InventoryChangeType.Added,
                         Amount = 1
@@ -188,7 +189,7 @@ namespace ArenaFall.Gameplay.Inventory
                     OnInventoryChanged?.Invoke();
                     EventBus.Raise(new InventoryChangedEvent
                     {
-                        PlayerId = gameObject.GetInstanceID().ToString(),
+                        PlayerId = UnityObjectId.ToString(gameObject),
                         ItemId = itemId,
                         ChangeType = InventoryChangeType.Removed,
                         Amount = amount

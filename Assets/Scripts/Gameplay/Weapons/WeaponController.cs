@@ -3,6 +3,7 @@ using System.Collections;
 using ArenaFall.Core;
 using ArenaFall.Data;
 using ArenaFall.Interfaces;
+using ArenaFall.Utilities;
 using ArenaFall.Events;
 using ArenaFall.Managers;
 using ArenaFall.Gameplay.Characters;
@@ -180,7 +181,7 @@ namespace ArenaFall.Gameplay.Weapons
             // Event
             EventBus.Raise(new WeaponFiredEvent
             {
-                PlayerId = _owner != null ? _owner.GetInstanceID().ToString() : "",
+                PlayerId = _owner != null ? UnityObjectId.ToString(_owner) : "",
                 WeaponId = _weaponData.weaponId,
                 FirePoint = _muzzlePoint.position,
                 AimPoint = aimPoint,
@@ -349,7 +350,7 @@ namespace ArenaFall.Gameplay.Weapons
 
             EventBus.Raise(new WeaponReloadedEvent
             {
-                PlayerId = _owner != null ? _owner.GetInstanceID().ToString() : "",
+                PlayerId = _owner != null ? UnityObjectId.ToString(_owner) : "",
                 WeaponId = _weaponData.weaponId,
                 WasEmpty = _currentAmmo == 0
             });
