@@ -49,8 +49,40 @@ namespace ArenaFall.Editor
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
 
+            // This is a mobile landscape game. Lock Android to landscape rather than
+            // allowing the device's portrait orientation to control the player window.
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
+            PlayerSettings.allowedAutorotateToPortrait = false;
+            PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            PlayerSettings.allowedAutorotateToLandscapeLeft = true;
+            PlayerSettings.allowedAutorotateToLandscapeRight = true;
+
+            ConfigureAndroidIcon();
             AssetDatabase.SaveAssets();
-            Debug.Log("[ArenaFall Cloud Build] Registered 14 scenes and configured Android player settings.");
+            Debug.Log("[ArenaFall Cloud Build] Registered 14 scenes and configured Android player settings, landscape orientation, and launcher icon.");
         }
+
+        private static void ConfigureAndroidIcon()
+        {
+            const string iconPath = "Assets/Art/Branding/ArenaFallIcon.png";
+            Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+            if (icon == null)
+            {
+                Debug.LogWarning("[ArenaFall Cloud Build] Launcher icon could not be loaded: " + iconPath);
+                return;
+            }
+
+            // Unity uses an array of Android density icon slots. Reuse this source icon
+            // for every slot; Unity/Gradle creates the required Android resources.
+            Texture2D[] icons = PlayerSettings.GetIconsForTargetGroup(BuildTargetGroup.Android);
+            if (icons == null || icons.Length == 0)
+                icons = new Texture2D[6];
+
+            for (int i = 0; i < icons.Length; i++)
+                icons[i] = icon;
+
+            PlayerSettings.SetIconsForTargetGroup(BuildTargetGroup.Android, icons);
+        }
+
     }
 }
