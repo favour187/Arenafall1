@@ -50,6 +50,11 @@ public class SceneAutoBuilder : MonoBehaviour
     {
         Debug.Log($"[SceneAutoBuilder] Building scene: {scene.name}");
 
+        if (scene.name != "Boot")
+        {
+            EnsureCoreManagersExist();
+        }
+
         // Clear any existing auto-generated objects to avoid duplicates
         CleanupPreviousBuild(scene);
 
@@ -1473,10 +1478,10 @@ public class SceneAutoBuilder : MonoBehaviour
 
         if (style == ButtonStyle.Primary) // Free Fire iconic "START" button
         {
-            outerBorderColor = new Color(0.95f, 0.76f, 0.12f, 0.85f); // Gold outline
-            innerBodyColor = new Color(0.95f, 0.61f, 0.07f, 1f);      // Bright Free Fire Gold/Amber
-            textColor = new Color(0.04f, 0.05f, 0.07f, 1f);          // Deep charcoal text for high contrast
-            accentBraceColor = new Color(1f, 0.3f, 0f, 1f);           // Vibrant orange accents
+            outerBorderColor = new Color(0.95f, 0.61f, 0.07f, 0.85f); // Rich Gold outline
+            innerBodyColor = new Color(0.12f, 0.08f, 0.06f, 0.94f);  // Matte copper charcoal body
+            textColor = new Color(0.95f, 0.61f, 0.07f, 1.0f);       // Bright high-contrast gold text
+            accentBraceColor = new Color(0.95f, 0.61f, 0.07f, 1f);    // Gold glowing side braces
         }
         else if (style == ButtonStyle.Accent)
         {
@@ -1632,9 +1637,19 @@ public class SceneAutoBuilder : MonoBehaviour
 
     private void EnsureCoreManagersExist()
     {
-        if (FindObjectOfType<GameManager>() != null) return;
+        if (FindObjectOfType<BackendClient>() != null) return;
 
-        Debug.Log("[SceneAutoBuilder] GameManager not found! Bootstrapping core managers...");
+        // Destroy any rogue, non-functional local GameManagers to avoid initialization conflicts
+        var rogueGMs = FindObjectsOfType<GameManager>();
+        foreach (var r in rogueGMs)
+        {
+            if (r.gameObject.name != "[AUTO] GameManager")
+            {
+                DestroyImmediate(r.gameObject);
+            }
+        }
+
+        Debug.Log("[SceneAutoBuilder] Bootstrapping core managers...");
         var gameManager = new GameObject("[AUTO] GameManager");
         DontDestroyOnLoad(gameManager);
         
