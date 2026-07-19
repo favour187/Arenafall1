@@ -129,8 +129,9 @@ namespace ArenaFall.UI.HUD
             txtObj.transform.SetParent(btnObj.transform, false);
             var txtRt = txtObj.AddComponent<RectTransform>();
             txtRt.anchorMin = Vector2.zero; txtRt.anchorMax = Vector2.one; txtRt.offsetMin = Vector2.zero; txtRt.offsetMax = Vector2.zero;
-            var txt = txtObj.AddComponent<TMPro.TextMeshProUGUI>();
-            txt.text = label; txt.fontSize = size.x > 90 ? 15 : 13; txt.color = Color.white; txt.fontStyle = TMPro.FontStyles.Bold; txt.alignment = TMPro.TextAlignmentOptions.Center;
+            var txt = txtObj.AddComponent<UnityEngine.UI.Text>();
+            txt.text = label; txt.fontSize = size.x > 90 ? 15 : 13; txt.color = Color.white; txt.fontStyle = FontStyle.Bold; txt.alignment = TextAnchor.MiddleCenter;
+            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
             var trigger = frameObj.AddComponent<EventTrigger>();
             AddTrigger(trigger, EventTriggerType.PointerDown, d => { frameObj.transform.localScale = new Vector3(0.91f, 0.91f, 1f); img.color = color; onDown?.Invoke(d); });

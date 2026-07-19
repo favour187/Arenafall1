@@ -1053,10 +1053,10 @@ public class SceneAutoBuilder : MonoBehaviour
             new Vector2(0, 0), new Vector2(140, 42), () => {
                 if (BackendClient.Instance != null)
                 {
-                    statusText.GetComponent<TextMeshProUGUI>().text = "Authenticating with authoritative backend...";
+                    statusText.GetComponent<UnityEngine.UI.Text>().text = "Authenticating with authoritative backend...";
                     BackendClient.Instance.Login("user@arenafall.com", "password123", (success, msg) => {
                         if (success) SceneManager.LoadScene("MainMenu");
-                        else statusText.GetComponent<TextMeshProUGUI>().text = msg;
+                        else statusText.GetComponent<UnityEngine.UI.Text>().text = msg;
                     });
                 }
                 else SceneManager.LoadScene("MainMenu");
@@ -1069,7 +1069,7 @@ public class SceneAutoBuilder : MonoBehaviour
                 {
                     BackendClient.Instance.Register("user@arenafall.com", "Vanguard_Soldier", "password123", (success, msg) => {
                         if (success) SceneManager.LoadScene("MainMenu");
-                        else statusText.GetComponent<TextMeshProUGUI>().text = msg;
+                        else statusText.GetComponent<UnityEngine.UI.Text>().text = msg;
                     });
                 }
                 else SceneManager.LoadScene("MainMenu");
@@ -1080,10 +1080,10 @@ public class SceneAutoBuilder : MonoBehaviour
             new Vector2(0, 0), new Vector2(320, 42), () => {
                 if (BackendClient.Instance != null)
                 {
-                    statusText.GetComponent<TextMeshProUGUI>().text = "Starting instant mobile guest session...";
+                    statusText.GetComponent<UnityEngine.UI.Text>().text = "Starting instant mobile guest session...";
                     BackendClient.Instance.LoginAsGuest((success, msg) => {
                         if (success) SceneManager.LoadScene("MainMenu");
-                        else statusText.GetComponent<TextMeshProUGUI>().text = msg;
+                        else statusText.GetComponent<UnityEngine.UI.Text>().text = msg;
                     });
                 }
                 else SceneManager.LoadScene("MainMenu");
@@ -1398,17 +1398,12 @@ public class SceneAutoBuilder : MonoBehaviour
         Vector2 anchorMin, Vector2 pivot, Vector2 anchorMax, Vector2 pivotMax)
     {
         var obj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
-        var tmp = obj.AddComponent<TextMeshProUGUI>();
+        var tmp = obj.AddComponent<UnityEngine.UI.Text>();
         tmp.text = text;
         tmp.fontSize = fontSize;
         tmp.color = color;
-        tmp.alignment = TextAlignmentOptions.Center;
-        
-        var fontAsset = Resources.Load<TMP_FontAsset>("LiberationSans SDF");
-        if (fontAsset != null)
-        {
-            tmp.font = fontAsset;
-        }
+        tmp.alignment = TextAnchor.MiddleCenter;
+        tmp.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
         
         var rt = obj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
@@ -1472,10 +1467,11 @@ public class SceneAutoBuilder : MonoBehaviour
 
         // Text
         var textObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer));
-        var tmp = textObj.AddComponent<TextMeshProUGUI>();
+        var tmp = textObj.AddComponent<UnityEngine.UI.Text>();
         tmp.text = label; tmp.fontSize = fontSize; tmp.color = Color.white;
-        tmp.alignment = TextAlignmentOptions.Center;
-        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent) tmp.fontStyle = FontStyles.Bold;
+        tmp.alignment = TextAnchor.MiddleCenter;
+        tmp.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent) tmp.fontStyle = FontStyle.Bold;
         var trt = textObj.GetComponent<RectTransform>();
         trt.SetParent(buttonObj.transform, false);
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
