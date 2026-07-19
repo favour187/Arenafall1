@@ -38,6 +38,7 @@ namespace ArenaFall.Managers
         public void SetFiring(bool firing) { IsFiring = firing; }
         public void SetAiming(bool aiming) { IsAiming = aiming; }
         public void SetJumping(bool jumping) { IsJumping = jumping; }
+        public void SetSprinting(bool sprinting) { IsSprinting = sprinting; }
         public void SetReloading(bool reloading) { IsReloading = reloading; }
         public void SetCrouching(bool crouching) { IsCrouching = crouching; }
         public void TriggerInteract() { TriggerInteractEvent(); }
@@ -74,15 +75,12 @@ namespace ArenaFall.Managers
                 SetupDefaultGameplayActions(_gameplayMap);
             }
 
-            // Bind all gameplay input events
             BindGameplayInput();
             _gameplayMap.Enable();
         }
 
         private void Update()
         {
-            // Direct Programmatic Keyboard / Mouse & Legacy Input Fallback
-            // Ensures movement, jumping, shooting, aiming, and interactions work smoothly without manual action map configuration!
             if (Keyboard.current != null)
             {
                 float x = 0; float y = 0;
@@ -147,7 +145,6 @@ namespace ArenaFall.Managers
             if (playerObj == null && Camera.main != null) playerObj = Camera.main.gameObject;
             if (playerObj == null) return;
 
-            // 1. Check if currently inside a vehicle to exit
             if (playerObj.transform.parent != null && playerObj.transform.parent.GetComponentInParent<Gameplay.Vehicles.VehicleController>() != null)
             {
                 var currentVeh = playerObj.transform.parent.GetComponentInParent<Gameplay.Vehicles.VehicleController>();
@@ -157,7 +154,6 @@ namespace ArenaFall.Managers
                 return;
             }
 
-            // 2. Check nearby Vehicles to enter
             var vehicles = FindObjectsOfType<Gameplay.Vehicles.VehicleController>();
             foreach (var veh in vehicles)
             {
@@ -172,7 +168,6 @@ namespace ArenaFall.Managers
                 }
             }
 
-            // 3. Check nearby Items/Weapons to pick up
             var interactables = FindObjectsOfType<MonoBehaviour>();
             foreach (var obj in interactables)
             {
@@ -243,9 +238,6 @@ namespace ArenaFall.Managers
             _gameplayMap["Scroll"].canceled += ctx => ScrollInput = 0f;
         }
 
-        /// <summary>
-        /// Switch to a specific input action map.
-        /// </summary>
         public void SwitchToMap(string mapName)
         {
             _gameplayMap?.Disable();
@@ -268,9 +260,6 @@ namespace ArenaFall.Managers
             }
         }
 
-        /// <summary>
-        /// Enable or disable all input.
-        /// </summary>
         public void SetInputEnabled(bool enabled)
         {
             if (enabled)
@@ -279,9 +268,6 @@ namespace ArenaFall.Managers
                 _gameplayMap?.Disable();
         }
 
-        /// <summary>
-        /// Update sensitivity value.
-        /// </summary>
         public void UpdateSensitivity(float newSensitivity)
         {
             Sensitivity = Mathf.Clamp(newSensitivity, 0.1f, 20f);

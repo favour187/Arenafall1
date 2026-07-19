@@ -857,7 +857,7 @@ public class SceneAutoBuilder : MonoBehaviour
         Color textColor = Color.white;
         Color accentBraceColor = HolographicCyan;
 
-        if (style == ButtonStyle.Primary) // Neon Orange Primary CTA
+        if (style == ButtonStyle.Primary)
         {
             outerBorderColor = NeonOrangeAccent;
             innerBodyColor = NeonOrangeAccent;
@@ -955,5 +955,73 @@ public class SceneAutoBuilder : MonoBehaviour
         gameManager.AddComponent<SafeZone>();
         gameManager.AddComponent<BackendClient>();
         gameManager.AddComponent<NetworkManagerSetup>();
+    }
+}
+
+/// <summary>
+/// Auto-loader to transition scenes after a delay
+/// </summary>
+public class AutoSceneLoader : MonoBehaviour
+{
+    public string sceneName = "Login";
+    public float delay = 1.8f;
+    private float _timer;
+
+    private void Start()
+    {
+        _timer = delay;
+    }
+
+    private void Update()
+    {
+        _timer -= Time.deltaTime;
+        if (_timer <= 0)
+        {
+            if (ArenaFall.Core.SceneLoader.Instance != null)
+            {
+                ArenaFall.Core.SceneLoader.Instance.LoadScene(sceneName);
+            }
+            else
+            {
+                SceneManager.LoadScene(sceneName);
+            }
+            enabled = false;
+        }
+    }
+}
+
+/// <summary>
+/// Rotation animation for 3D dummy targets
+/// </summary>
+public class RotateAnimation : MonoBehaviour
+{
+    private void Update()
+    {
+        transform.Rotate(Vector3.up, 30f * Time.deltaTime);
+    }
+}
+
+/// <summary>
+/// Tactical button press feedback animation
+/// </summary>
+public class TactileButton : MonoBehaviour, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler
+{
+    public Vector3 pressScale = new Vector3(0.96f, 0.96f, 1f);
+    public Image neonStrip;
+    public Image rightBrace;
+    public Color neonColor;
+
+    public void OnPointerDown(UnityEngine.EventSystems.PointerEventData eventData)
+    {
+        transform.localScale = pressScale;
+        if (neonStrip != null) neonStrip.color = Color.white;
+        if (rightBrace != null) rightBrace.color = Color.white;
+    }
+
+    public void OnPointerUp(UnityEngine.EventSystems.PointerEventData eventData)
+    {
+        transform.localScale = Vector3.one;
+        if (neonStrip != null) neonStrip.color = neonColor;
+        if (rightBrace != null) rightBrace.color = neonColor;
     }
 }
