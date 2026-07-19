@@ -205,9 +205,9 @@ public class SceneAutoBuilder : MonoBehaviour
         var lrt = loadingText.GetComponent<RectTransform>();
         lrt.anchoredPosition = new Vector2(0, 40);
         
-        // Auto-transition to MainMenu after brief delay
+        // Auto-transition to Login after brief delay
         var loader = bg.AddComponent<AutoSceneLoader>();
-        loader.sceneName = "MainMenu";
+        loader.sceneName = "Login";
         loader.delay = 2f;
     }
 
@@ -284,33 +284,33 @@ public class SceneAutoBuilder : MonoBehaviour
         var leftPanel = CreatePanel(bg.transform, "NavPanel", new Color(0, 0, 0, 0),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         var lpanelR = leftPanel.GetComponent<RectTransform>();
-        lpanelR.anchoredPosition = new Vector2(-200, -30);
-        lpanelR.sizeDelta = new Vector2(280, 360);
+        lpanelR.anchoredPosition = new Vector2(-240, -40);
+        lpanelR.sizeDelta = new Vector2(340, 420);
         
         // Play button — LARGE, primary
-        CreateMenuButton(lpanelR.transform, "PlayButton", "PLAY", 28, ButtonStyle.Primary, 
+        CreateMenuButton(lpanelR.transform, "PlayButton", "🚀 FIND MATCH (ONLINE LOBBY)", 20, ButtonStyle.Primary, 
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -10), new Vector2(260, 60), () => {
+            new Vector2(0, -10), new Vector2(320, 75), () => {
                 SceneManager.LoadScene("Lobby");
             });
         
         // Mode buttons
-        CreateMenuButton(lpanelR.transform, "SoloButton", "SOLO", 20, ButtonStyle.Secondary,
+        CreateMenuButton(lpanelR.transform, "SoloButton", "🤖 SOLO PRACTICE (VS BOTS)", 18, ButtonStyle.Secondary,
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -80), new Vector2(260, 50), () => {
+            new Vector2(0, -95), new Vector2(320, 55), () => {
                 SceneManager.LoadScene("GameMap");
             });
         
-        CreateMenuButton(lpanelR.transform, "DuosButton", "DUOS", 20, ButtonStyle.Secondary,
+        CreateMenuButton(lpanelR.transform, "DuosButton", "👥 DUOS MATCHMAKING", 18, ButtonStyle.Secondary,
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -140), new Vector2(260, 50), () => {
+            new Vector2(0, -160), new Vector2(320, 55), () => {
                 if (BackendClient.Instance != null) BackendClient.Instance.JoinMatchmakingQueue("Battle Royale (Duos)", null);
                 SceneManager.LoadScene("Matchmaking");
             });
         
-        CreateMenuButton(lpanelR.transform, "SquadsButton", "SQUADS", 20, ButtonStyle.Secondary,
+        CreateMenuButton(lpanelR.transform, "SquadsButton", "🎖️ SQUADS MATCHMAKING", 18, ButtonStyle.Secondary,
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -200), new Vector2(260, 50), () => {
+            new Vector2(0, -225), new Vector2(320, 55), () => {
                 if (BackendClient.Instance != null) BackendClient.Instance.JoinMatchmakingQueue("Battle Royale (Squads)", null);
                 SceneManager.LoadScene("Matchmaking");
             });
@@ -319,24 +319,24 @@ public class SceneAutoBuilder : MonoBehaviour
         var rightPanel = CreatePanel(bg.transform, "ActionPanel", new Color(0, 0, 0, 0),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         var rpanelR = rightPanel.GetComponent<RectTransform>();
-        rpanelR.anchoredPosition = new Vector2(200, -30);
-        rpanelR.sizeDelta = new Vector2(280, 360);
+        rpanelR.anchoredPosition = new Vector2(240, -40);
+        rpanelR.sizeDelta = new Vector2(340, 420);
         
-        CreateMenuButton(rpanelR.transform, "TrainingButton", "TRAINING", 18, ButtonStyle.Tertiary,
+        CreateMenuButton(rpanelR.transform, "TrainingButton", "🎯 SHOOTING RANGE (TRAINING)", 18, ButtonStyle.Tertiary,
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -10), new Vector2(260, 50), () => {
+            new Vector2(0, -10), new Vector2(320, 55), () => {
                 SceneManager.LoadScene("TrainingGround");
             });
         
-        CreateMenuButton(rpanelR.transform, "CustomizeButton", "CUSTOMIZE", 18, ButtonStyle.Tertiary,
+        CreateMenuButton(rpanelR.transform, "CustomizeButton", "👕 SKINS & CUSTOMIZE", 18, ButtonStyle.Tertiary,
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -70), new Vector2(260, 50), () => {
+            new Vector2(0, -75), new Vector2(320, 55), () => {
                 SceneManager.LoadScene("Customization");
             });
         
-        CreateMenuButton(rpanelR.transform, "LoadoutButton", "LOADOUT", 18, ButtonStyle.Tertiary,
+        CreateMenuButton(rpanelR.transform, "LoadoutButton", "🔫 WEAPON ARMORY (LOADOUT)", 18, ButtonStyle.Tertiary,
             new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -130), new Vector2(260, 50), () => {
+            new Vector2(0, -140), new Vector2(320, 55), () => {
                 SceneManager.LoadScene("Loadout");
             });
         
@@ -1041,15 +1041,15 @@ public class SceneAutoBuilder : MonoBehaviour
 
         var panel = CreatePanel(bg.transform, "LoginBox", new Color(0.1f, 0.15f, 0.25f, 0.8f),
             new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f));
-        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(380, 240);
+        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(380, 310);
 
         CreateText(panel.transform, "EmailLabel", "EMAIL: user@arenafall.com", 14, Color.white,
-            new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f), new Vector2(0.5f, 0.82f));
+            new Vector2(0.5f, 0.86f), new Vector2(0.5f, 0.86f), new Vector2(0.5f, 0.86f), new Vector2(0.5f, 0.86f));
         CreateText(panel.transform, "PassLabel", "PASSWORD: **********", 14, Color.white,
-            new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f));
+            new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f));
 
         CreateMenuButton(panel.transform, "LoginButton", "LOGIN", 18, ButtonStyle.Primary,
-            new Vector2(0.28f, 0.4f), new Vector2(0.28f, 0.4f), new Vector2(0.28f, 0.4f), new Vector2(0.28f, 0.4f),
+            new Vector2(0.28f, 0.55f), new Vector2(0.28f, 0.55f), new Vector2(0.28f, 0.55f), new Vector2(0.28f, 0.55f),
             new Vector2(0, 0), new Vector2(140, 42), () => {
                 if (BackendClient.Instance != null)
                 {
@@ -1063,7 +1063,7 @@ public class SceneAutoBuilder : MonoBehaviour
             });
 
         CreateMenuButton(panel.transform, "RegisterButton", "REGISTER", 18, ButtonStyle.Secondary,
-            new Vector2(0.72f, 0.4f), new Vector2(0.72f, 0.4f), new Vector2(0.72f, 0.4f), new Vector2(0.72f, 0.4f),
+            new Vector2(0.72f, 0.55f), new Vector2(0.72f, 0.55f), new Vector2(0.72f, 0.55f), new Vector2(0.72f, 0.55f),
             new Vector2(0, 0), new Vector2(140, 42), () => {
                 if (BackendClient.Instance != null)
                 {
@@ -1075,8 +1075,8 @@ public class SceneAutoBuilder : MonoBehaviour
                 else SceneManager.LoadScene("MainMenu");
             });
 
-        CreateMenuButton(panel.transform, "GuestButton", "⚡ PLAY AS GUEST (INSTANT MOBILE / IOS)", 15, ButtonStyle.Accent,
-            new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f), new Vector2(0.5f, 0.14f),
+        CreateMenuButton(panel.transform, "GuestButton", "⚡ PLAY AS GUEST (ONLINE MOBILE)", 15, ButtonStyle.Accent,
+            new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f),
             new Vector2(0, 0), new Vector2(320, 42), () => {
                 if (BackendClient.Instance != null)
                 {
@@ -1087,6 +1087,12 @@ public class SceneAutoBuilder : MonoBehaviour
                     });
                 }
                 else SceneManager.LoadScene("MainMenu");
+            });
+
+        CreateMenuButton(panel.transform, "OfflineButton", "📴 PLAY OFFLINE (OFFLINE MODE)", 15, ButtonStyle.Tertiary,
+            new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f),
+            new Vector2(0, 0), new Vector2(320, 42), () => {
+                SceneManager.LoadScene("MainMenu");
             });
     }
 
@@ -1468,6 +1474,7 @@ public class SceneAutoBuilder : MonoBehaviour
         // Text
         var textObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer));
         var tmp = textObj.AddComponent<UnityEngine.UI.Text>();
+        tmp.raycastTarget = false;
         tmp.text = label; tmp.fontSize = fontSize; tmp.color = Color.white;
         tmp.alignment = TextAnchor.MiddleCenter;
         tmp.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
@@ -1481,6 +1488,11 @@ public class SceneAutoBuilder : MonoBehaviour
 
         // Modern Tactile Scaling & Glow Animations
         var trigger = buttonObj.AddComponent<UnityEngine.EventSystems.EventTrigger>();
+        
+        var click = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerClick };
+        click.callback.AddListener(_ => onClick?.Invoke());
+        trigger.triggers.Add(click);
+
         var enter = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter };
         enter.callback.AddListener(_ => { buttonObj.transform.localScale = new Vector3(1.04f, 1.04f, 1f); nImg.color = Color.white; });
         trigger.triggers.Add(enter);

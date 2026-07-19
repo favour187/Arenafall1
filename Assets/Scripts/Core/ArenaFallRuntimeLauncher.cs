@@ -32,8 +32,8 @@ namespace ArenaFall.Core
 
             if (SceneManager.GetActiveScene().name == "Boot")
             {
-                Debug.Log("[ArenaFall] Boot scene fallback: loading MainMenu.");
-                SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+                Debug.Log("[ArenaFall] Boot scene fallback: loading Login.");
+                SceneManager.LoadScene("Login", LoadSceneMode.Single);
             }
 
             Destroy(gameObject);
