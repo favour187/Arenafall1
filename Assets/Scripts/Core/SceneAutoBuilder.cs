@@ -1331,7 +1331,7 @@ public class SceneAutoBuilder : MonoBehaviour
     }
 
     private GameObject CreatePanel(Transform parent, string name, Color color, 
-        Vector2 anchorMin, Vector2 anchorMax, Vector2 pivotMin, Vector2 pivotMax)
+        Vector2 anchorMin, Vector2 pivot, Vector2 anchorMax, Vector2 pivotMax)
     {
         var obj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
         var image = obj.AddComponent<Image>();
@@ -1340,12 +1340,13 @@ public class SceneAutoBuilder : MonoBehaviour
         rt.SetParent(parent, false);
         rt.anchorMin = anchorMin;
         rt.anchorMax = anchorMax;
-        rt.pivot = pivotMin;
+        rt.pivot = pivot;
+        rt.sizeDelta = Vector2.zero;
         return obj;
     }
 
     private GameObject CreateImage(Transform parent, string name, Color color,
-        Vector2 anchorMin, Vector2 anchorMax, Vector2 pivotMin, Vector2 pivotMax)
+        Vector2 anchorMin, Vector2 pivot, Vector2 anchorMax, Vector2 pivotMax)
     {
         var obj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
         var image = obj.AddComponent<Image>();
@@ -1354,7 +1355,8 @@ public class SceneAutoBuilder : MonoBehaviour
         rt.SetParent(parent, false);
         rt.anchorMin = anchorMin;
         rt.anchorMax = anchorMax;
-        rt.pivot = pivotMin;
+        rt.pivot = pivot;
+        rt.sizeDelta = Vector2.zero;
         
         // AUTO-LOAD YOUR AI ART: Try to find a matching sprite in Resources
         TryLoadArtSprite(image, name);
@@ -1393,7 +1395,7 @@ public class SceneAutoBuilder : MonoBehaviour
     }
 
     private GameObject CreateText(Transform parent, string name, string text, int fontSize, Color color,
-        Vector2 anchorMin, Vector2 anchorMax, Vector2 pivotMin, Vector2 pivotMax)
+        Vector2 anchorMin, Vector2 pivot, Vector2 anchorMax, Vector2 pivotMax)
     {
         var obj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
         var tmp = obj.AddComponent<TextMeshProUGUI>();
@@ -1401,12 +1403,18 @@ public class SceneAutoBuilder : MonoBehaviour
         tmp.fontSize = fontSize;
         tmp.color = color;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.font = Resources.Load<TMP_FontAsset>("LiberationSans SDF");
+        
+        var fontAsset = Resources.Load<TMP_FontAsset>("LiberationSans SDF");
+        if (fontAsset != null)
+        {
+            tmp.font = fontAsset;
+        }
+        
         var rt = obj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
         rt.anchorMin = anchorMin;
         rt.anchorMax = anchorMax;
-        rt.pivot = pivotMin;
+        rt.pivot = pivot;
         rt.sizeDelta = new Vector2(200, 30);
         return obj;
     }
