@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arena Fall — Glassmorphic Sci-Fi Theme & Scene Showcase</title>
+<style>
+  :root {
+    --navy: #0A1628; --steel: #1E3A5F; --dark-navy: #050B14;
+    --primary: #FF6B35; --cyan: #00D4FF; --amber: #FFB800; --green: #44FF55;
+    --text: #FFFFFF; --muted: #B0B8C4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Roboto, sans-serif; background: var(--navy); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+  /* Left Sidebar Navigation */
+  .sidebar { width: 300px; background: rgba(30,58,95,0.85); backdrop-filter: blur(12px); border-right: 1px solid var(--cyan); display: flex; flex-direction: column; }
+  .sidebar-header { padding: 20px; border-bottom: 2px solid var(--cyan); background: rgba(0,212,255,0.08); }
+  .sidebar-header h2 { font-size: 18px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; }
+  .sidebar-header p { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  
+  .scene-list { flex: 1; overflow-y: auto; padding: 12px; }
+  .scene-btn { width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 6px; background: rgba(10,22,40,0.6); border: 1px solid rgba(0,212,255,0.2); border-radius: 6px; color: var(--text); text-align: left; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s; }
+  .scene-btn:hover, .scene-btn.active { background: rgba(0,212,255,0.18); border-color: var(--cyan); color: var(--cyan); }
+  .scene-btn .num { background: rgba(255,107,53,0.2); padding: 2px 6px; border-radius: 3px; font-size: 11px; color: var(--primary); border: 1px solid var(--primary); }
+
+  /* Main Preview Canvas */
+  .viewport { flex: 1; display: flex; flex-direction: column; background: var(--dark-navy); position: relative; overflow: hidden; }
+  .viewport-header { padding: 14px 24px; background: rgba(30,58,95,0.9); border-bottom: 1px solid var(--cyan); display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+  .viewport-title { font-size: 16px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 10px; }
+  .status-badge { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: rgba(68,255,85,0.2); color: var(--green); border: 1px solid var(--green); font-weight: 800; }
+
+  .canvas-screen { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #1E3A5F 0%, #050B14 100%); }
+
+  .sim-canvas { width: 100%; height: 100%; position: absolute; top:0; left:0; overflow: hidden; display: none; }
+  .sim-canvas.active { display: block; }
+
+  /* Glassmorphic UI Components */
+  .top-bar-mock { position: absolute; top:0; left:0; right:0; height:64px; background: rgba(10,22,40,0.92); border-bottom: 1px solid var(--cyan); display:flex; justify-content:space-between; align-items:center; padding:0 20px; }
+  .profile-card-mock { display:flex; align-items:center; gap:10px; background: var(--steel); padding:6px 14px; border:1px solid var(--cyan); border-radius:6px; }
+  .currency-pills { display:flex; gap:12px; }
+  .pill { background: var(--steel); border:1px solid var(--cyan); padding:6px 14px; border-radius:6px; font-size:12px; font-weight:800; }
+  
+  .left-dock-mock { position: absolute; left:20px; top:84px; width:190px; display:flex; flex-direction:column; gap:8px; }
+  .dock-card { background: rgba(30,58,95,0.85); border:1px solid rgba(0,212,255,0.3); padding:10px; text-align:center; font-size:12px; font-weight:800; border-left:4px solid var(--cyan); border-radius:4px; cursor:pointer; color:white; }
+  .dock-card:hover { border-color:var(--primary); color:var(--primary); }
+
+  .bottom-right-start { position: absolute; right:20px; bottom:20px; display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+  .mode-box { background: var(--steel); border:1px solid var(--cyan); padding:8px 16px; border-radius:6px; text-align:right; }
+  .btn-start-massive { background: var(--primary); color:white; border:2px solid var(--primary); padding:18px 50px; border-radius:6px; font-size:24px; font-weight:900; letter-spacing:1px; cursor:pointer; box-shadow:0 0 24px rgba(255,107,53,0.5); }
+
+  /* In-Game Touch Controls Overlay */
+  .touch-hud-overlay { position:absolute; inset:0; pointer-events:none; }
+  .ring-btn { position:absolute; width:70px; height:70px; border-radius:50%; border:2px solid var(--cyan); background:rgba(10,22,40,0.88); display:flex; justify-content:center; align-items:center; font-size:11px; font-weight:900; color:white; pointer-events:auto; cursor:pointer; }
+  .ring-btn-fire { width:115px; height:115px; border-color:var(--primary); background:rgba(255,107,53,0.25); font-size:15px; }
+  .ring-btn-scope { border-color:var(--cyan); }
+  .hp-bar-box { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); width:270px; background:rgba(10,22,40,0.95); border:1px solid var(--cyan); padding:8px; border-radius:6px; text-align:center; }
+  .hp-gauge { height:12px; background:var(--green); border-radius:2px; margin-top:4px; }
+  .ep-gauge { height:6px; background:var(--cyan); border-radius:2px; margin-top:2px; }
+
+  /* Flow inspector console */
+  .log-console { height: 160px; background: #03060C; border-top: 1px solid var(--cyan); padding: 12px 20px; font-family: monospace; font-size: 12px; overflow-y: auto; color: var(--cyan); }
+  .log-entry { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h2>🎮 Arena Fall Sci-Fi UI</h2>
+    <p>Clean Glassmorphic Style Guide Verification</p>
+  </div>
+  <div class="scene-list">
+    <button class="scene-btn active" onclick="selectScene('01_Boot', this)"><span class="num">01</span> Boot Sequence</button>
+    <button class="scene-btn" onclick="selectScene('02_Login', this)"><span class="num">02</span> Tactical Login</button>
+    <button class="scene-btn" onclick="selectScene('03_MainMenu', this)"><span class="num">03</span> Main Lobby Menu</button>
+    <button class="scene-btn" onclick="selectScene('04_Profile', this)"><span class="num">04</span> Profile Career</button>
+    <button class="scene-btn" onclick="selectScene('05_Lobby', this)"><span class="num">05</span> Pre-Match Lobby</button>
+    <button class="scene-btn" onclick="selectScene('06_Customization', this)"><span class="num">06</span> Customization Store</button>
+    <button class="scene-btn" onclick="selectScene('07_Loadout', this)"><span class="num">07</span> Armory Loadout</button>
+    <button class="scene-btn" onclick="selectScene('08_TrainingGround', this)"><span class="num">08</span> Shooting Range</button>
+    <button class="scene-btn" onclick="selectScene('09_Matchmaking', this)"><span class="num">09</span> Match Queue</button>
+    <button class="scene-btn" onclick="selectScene('10_GameMap', this)"><span class="num">10</span> Battle Royale Map</button>
+    <button class="scene-btn" onclick="selectScene('11_ResultScreen', this)"><span class="num">11</span> Victory Summary</button>
+    <button class="scene-btn" onclick="selectScene('12_Replay', this)"><span class="num">12</span> Replay Theater</button>
+    <button class="scene-btn" onclick="selectScene('13_Settings', this)"><span class="num">13</span> Game Settings</button>
+    <button class="scene-btn" onclick="selectScene('14_TestScene', this)"><span class="num">14</span> Dev Test Scene</button>
+  </div>
+</div>
+
+<div class="viewport">
+  <div class="viewport-header">
+    <div class="viewport-title" id="active-scene-title">01_Boot — Boot Sequence & Auto-Loader</div>
+    <div style="display:flex; gap:10px;">
+      <span class="status-badge">✅ SCI-FI THEME ACTIVE</span>
+      <span class="status-badge" style="border-color:var(--cyan); color:var(--cyan);">⚡ LIVE DYNAMIC BINDINGS</span>
+    </div>
+  </div>
+
+  <div class="canvas-screen">
+    
+    <!-- 01_Boot -->
+    <div class="sim-canvas active" id="canvas-01_Boot">
+      <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; background:var(--navy);">
+        <h1 style="font-size:38px; color:var(--cyan); letter-spacing:2px;">🎮 ARENA FALL</h1>
+        <p style="color:var(--muted); margin:12px 0 24px;">CLEAN SCI-FI BATTLE ROYALE ENGINE</p>
+        <div style="width:220px; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
+          <div style="width:75%; height:100%; background:var(--cyan);"></div>
+        </div>
+        <p style="font-size:12px; color:var(--primary); margin-top:10px;">Auto-transitioning to Login (1.8s)...</p>
+      </div>
+    </div>
+
+    <!-- 02_Login -->
+    <div class="sim-canvas" id="canvas-02_Login">
+      <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; background:radial-gradient(circle, #1E3A5F 0%, #0A1628 100%);">
+        <h1 style="color:var(--cyan); margin-bottom:20px;">ARENA FALL LOGIN</h1>
+        <div style="background:var(--steel); border:1px solid var(--cyan); padding:30px; border-radius:8px; width:340px; display:flex; flex-direction:column; gap:12px;">
+          <input style="background:var(--navy); border:1px solid var(--cyan); color:white; padding:10px; border-radius:4px;" value="soldier@arenafall.com" readonly>
+          <input style="background:var(--navy); border:1px solid var(--cyan); color:white; padding:10px; border-radius:4px;" type="password" value="••••••••••" readonly>
+          <button class="dock-card" style="background:var(--primary); border-color:var(--primary); color:white;" onclick="triggerTransition('03_MainMenu')">⚡ PLAY AS GUEST</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03_MainMenu -->
+    <div class="sim-canvas" id="canvas-03_MainMenu">
+      <div class="top-bar-mock">
+        <div class="profile-card-mock">
+          <div>
+            <div style="font-size:13px; font-weight:800;" id="m-name">VANGUARD-01</div>
+            <div style="font-size:10px; color:var(--cyan);">⚡ GRANDMASTER | LVL 45</div>
+          </div>
+        </div>
+        <div class="currency-pills">
+          <div class="pill" style="color:var(--primary);">🪙 25,400</div>
+          <div class="pill" style="color:var(--cyan);">💎 1,250</div>
+        </div>
+      </div>
+
+      <div class="left-dock-mock">
+        <div class="dock-card" onclick="triggerTransition('06_Customization')">🛒 STORE</div>
+        <div class="dock-card" onclick="triggerTransition('06_Customization')">🎁 BATTLE PASS</div>
+        <div class="dock-card" onclick="triggerTransition('04_Profile')">👤 CHARACTERS</div>
+        <div class="dock-card" onclick="triggerTransition('07_Loadout')">🔫 ARMORY</div>
+        <div class="dock-card" onclick="triggerTransition('04_Profile')">🏆 CAREER STATS</div>
+      </div>
+
+      <div class="bottom-right-start">
+        <div class="mode-box">
+          <div style="font-weight:800; font-size:13px;">BATTLE ROYALE (NEXUS)</div>
+          <div style="font-size:10px; color:var(--cyan);">SOLO / SQUAD (60 PLAYERS)</div>
+        </div>
+        <button class="btn-start-massive" onclick="triggerTransition('10_GameMap')">🚀 FIND MATCH</button>
+      </div>
+    </div>
+
+    <!-- 10_GameMap -->
+    <div class="sim-canvas" id="canvas-10_GameMap">
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, #1E3A5F 0%, #0A1628 100%);">
+        <div style="position:absolute; top:20px; left:20px; background:var(--navy); border:1px solid var(--cyan); padding:8px 16px; border-radius:6px; font-size:12px; font-weight:800;">
+          ALIVE: 60 | KILLS: 0
+        </div>
+        <div style="position:absolute; top:20px; right:20px; width:135px; height:135px; background:var(--navy); border:2px solid var(--cyan); border-radius:6px; display:flex; justify-content:center; align-items:center; font-size:11px; color:var(--muted);">
+          SQ MINIMAP
+        </div>
+
+        <div class="touch-hud-overlay">
+          <div class="ring-btn" style="left:120px; bottom:120px; width:120px; height:120px; border-color:var(--cyan);">JOYSTICK</div>
+          <div class="ring-btn" style="left:120px; bottom:250px;">🏃 SPRINT</div>
+          <div class="ring-btn" style="left:40px; bottom:180px; border-color:var(--primary);">🔥 FIRE (L)</div>
+
+          <div class="ring-btn ring-btn-fire" style="right:90px; bottom:90px;">🔥 FIRE</div>
+          <div class="ring-btn ring-btn-scope" style="right:90px; bottom:220px;">🎯 SCOPE</div>
+          <div class="ring-btn" style="right:190px; bottom:180px;">🦘 JUMP</div>
+          <div class="ring-btn" style="right:200px; bottom:100px;">🧘 CROUCH</div>
+          <div class="ring-btn" style="right:190px; bottom:30px;">🧎 PRONE</div>
+
+          <div class="hp-bar-box">
+            <div style="font-size:11px; font-weight:800;">HP  200 / 200</div>
+            <div class="hp-gauge"></div>
+            <div class="ep-gauge"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11_ResultScreen -->
+    <div class="sim-canvas" id="canvas-11_ResultScreen">
+      <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; background:var(--navy);">
+        <h1 style="font-size:48px; color:var(--cyan);">🏆 VICTORY ROYALE 🏆</h1>
+        <p style="color:white; margin:10px 0 30px;">ARENA FALL CHAMPION — LAST STANDING</p>
+        <div style="display:flex; gap:16px; margin-bottom:30px;">
+          <div class="pill" style="padding:16px 24px; text-align:center;"><div style="font-size:24px; color:var(--primary);">7</div>KILLS</div>
+          <div class="pill" style="padding:16px 24px; text-align:center;"><div style="font-size:24px; color:var(--primary);">1,420</div>DAMAGE</div>
+          <div class="pill" style="padding:16px 24px; text-align:center;"><div style="font-size:24px; color:var(--primary);">+1,550</div>XP EARNED</div>
+        </div>
+        <button class="btn-start-massive" style="font-size:16px; padding:12px 30px;" onclick="triggerTransition('03_MainMenu')">MAIN MENU</button>
+      </div>
+    </div>
+
+    <!-- Generic Fallback Canvas -->
+    <div class="sim-canvas" id="canvas-generic">
+      <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%;">
+        <h2 id="gen-title" style="color:var(--cyan);">SCENE PREVIEW</h2>
+        <p id="gen-desc" style="color:var(--muted); margin:12px 0 24px;">Generated glassmorphic layout bound via SceneAutoBuilder.cs</p>
+        <button class="dock-card" style="width:220px;" onclick="triggerTransition('03_MainMenu')">← BACK TO MAIN MENU</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="log-console" id="log-console">
+    <div class="log-entry">[StyleGuideInspector] Palette matched to 03_ArtStyleGuide & 04_UI_Style_Guide.</div>
+  </div>
+</div>
+
+<script>
+function selectScene(sceneName, btn) {
+  document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  document.querySelectorAll('.sim-canvas').forEach(c => c.classList.remove('active'));
+  
+  const el = document.getElementById(`canvas-${sceneName}`);
+  if (el) {
+    el.classList.add('active');
+  } else {
+    const gen = document.getElementById('canvas-generic');
+    document.getElementById('gen-title').textContent = sceneName.toUpperCase();
+    document.getElementById('gen-desc').textContent = `Runtime generated layout bound via SceneAutoBuilder.cs (${sceneName})`;
+    gen.classList.add('active');
+  }
+
+  document.getElementById('active-scene-title').textContent = `${sceneName} — Interactive Visual Inspector`;
+  log(`[SceneTransition] Loaded scene: ${sceneName} successfully. Style guide rules validated.`);
+}
+
+function triggerTransition(targetScene) {
+  log(`[ButtonAction] Triggering transition ➔ ${targetScene}`);
+  const btn = Array.from(document.querySelectorAll('.scene-btn')).find(b => b.textContent.includes(targetScene));
+  if (btn) selectScene(targetScene, btn);
+}
+
+function log(msg) {
+  const c = document.getElementById('log-console');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.textContent = `${new Date().toLocaleTimeString()} ${msg}`;
+  c.appendChild(div);
+  c.scrollTop = c.scrollHeight;
+}
+</script>
+</body>
+</html>

@@ -226,13 +226,11 @@ namespace ArenaFall.Managers
                     break;
 
                 case MatchPhase.Playing:
-                    // Match continues until win condition
                     break;
 
                 case MatchPhase.PostMatch:
                     if (_phaseTimer <= 0)
                     {
-                        // Return to lobby/main menu
                         var sceneLoader = FindObjectOfType<SceneLoader>();
                         if (sceneLoader != null)
                         {
@@ -254,7 +252,7 @@ namespace ArenaFall.Managers
                     _phaseTimer = _lobbyWaitTime;
                     break;
                 case MatchPhase.PreDrop:
-                    _phaseTimer = 10f; // Countdown
+                    _phaseTimer = 10f;
                     break;
                 case MatchPhase.Dropping:
                     _phaseTimer = _dropPhaseTime;
@@ -273,30 +271,21 @@ namespace ArenaFall.Managers
 
         private void SpawnPlayers()
         {
-            // In a real game, players would spawn in drop pods
-            // For now, scatter them around the map
             foreach (var player in _players.Values)
             {
                 if (player.alive)
                 {
-                    // Player would be spawned via network
                 }
             }
         }
 
-        /// <summary>
-        /// Get rank/placement for a player.
-        /// </summary>
         public int GetPlayerPlacement(string playerId)
         {
             if (_players.ContainsKey(playerId))
                 return _players[playerId].placement;
-            return _players.Count;
+            return _players.Count > 0 ? _players.Count : 1;
         }
 
-        /// <summary>
-        /// Get player match score.
-        /// </summary>
         public int GetPlayerScore(string playerId)
         {
             if (_players.ContainsKey(playerId))
@@ -304,9 +293,20 @@ namespace ArenaFall.Managers
             return 0;
         }
 
-        /// <summary>
-        /// Get all players sorted by placement.
-        /// </summary>
+        public int GetPlayerKills(string playerId)
+        {
+            if (_players.ContainsKey(playerId))
+                return _players[playerId].kills;
+            return 0;
+        }
+
+        public int GetPlayerDamage(string playerId)
+        {
+            if (_players.ContainsKey(playerId))
+                return _players[playerId].damageDealt;
+            return 0;
+        }
+
         public List<PlayerMatchData> GetRankings()
         {
             var rankings = new List<PlayerMatchData>(_players.Values);
@@ -321,7 +321,6 @@ namespace ArenaFall.Managers
 
         private void OnPlayerEliminated(PlayerEliminatedEvent evt)
         {
-            // Additional logic when player is eliminated
         }
 
         private void OnDestroy()
@@ -331,9 +330,6 @@ namespace ArenaFall.Managers
         }
     }
 
-    /// <summary>
-    /// Match data for a single player.
-    /// </summary>
     [System.Serializable]
     public class PlayerMatchData
     {

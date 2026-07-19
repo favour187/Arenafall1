@@ -16,13 +16,21 @@ using ArenaFall.Gameplay.Zone;
 using ArenaFall.Networking;
 
 /// <summary>
-/// AUTO-GENERATES all GameObjects when a scene loads.
-/// Attach to Bootstrapper. No manual setup needed!
+/// AUTO-GENERATES all GameObjects and UI layouts when a scene loads.
+/// Built strictly following the original Arena Fall Art & UI Style Guides (Clean Glassmorphic Sci-Fi).
+/// Palette: Deep Navy (#0A1628), Steel Blue (#1E3A5F), Holographic Cyan (#00D4FF), and Neon Orange (#FF6B35).
 /// </summary>
 public class SceneAutoBuilder : MonoBehaviour
 {
     private static bool _initialized;
-    private Dictionary<string, Sprite> _spriteCache = new();
+
+    // Arena Fall Official Sci-Fi Theme Color System
+    private static readonly Color DeepNavyBg = new Color(0.039f, 0.086f, 0.157f, 0.92f);   // #0A1628
+    private static readonly Color SteelBlueCard = new Color(0.118f, 0.227f, 0.373f, 0.88f); // #1E3A5F
+    private static readonly Color HolographicCyan = new Color(0f, 0.831f, 1f, 1f);        // #00D4FF
+    private static readonly Color NeonOrangeAccent = new Color(1f, 0.42f, 0.208f, 1f);     // #FF6B35
+    private static readonly Color ShieldCyanGlow = new Color(0f, 0.831f, 1f, 0.85f);
+    private static readonly Color SuccessGreen = new Color(0.267f, 1f, 0.333f, 1f);       // #44FF55
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void AutoInitOnPlay()
@@ -38,7 +46,7 @@ public class SceneAutoBuilder : MonoBehaviour
         _initialized = true;
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
-        Debug.Log("[SceneAutoBuilder] Active — scenes will auto-generate on load");
+        Debug.Log("[SceneAutoBuilder] Active — Clean Glassmorphic Sci-Fi Theme Engaged");
     }
 
     private void OnDestroy()
@@ -48,18 +56,23 @@ public class SceneAutoBuilder : MonoBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"[SceneAutoBuilder] Building scene: {scene.name}");
+        Debug.Log($"[SceneAutoBuilder] Auto-generating scene '{scene.name}' using Arena Fall Sci-Fi Theme.");
 
-        if (scene.name != "Boot")
+        if (!scene.name.Contains("Boot"))
         {
             EnsureCoreManagersExist();
         }
 
-        // Clear any existing auto-generated objects to avoid duplicates
         CleanupPreviousBuild(scene);
 
-        // Build based on scene name
-        switch (scene.name)
+        // Normalize numbered scene names seamlessly
+        string sName = scene.name.Replace("01_", "").Replace("02_", "").Replace("03_", "")
+                                  .Replace("04_", "").Replace("05_", "").Replace("06_", "")
+                                  .Replace("07_", "").Replace("08_", "").Replace("09_", "")
+                                  .Replace("10_", "").Replace("11_", "").Replace("12_", "")
+                                  .Replace("13_", "").Replace("14_", "");
+
+        switch (sName)
         {
             case "Boot":
                 BuildBootScene(scene);
@@ -104,12 +117,11 @@ public class SceneAutoBuilder : MonoBehaviour
                 BuildTestScene(scene);
                 break;
             default:
-                // Any other scene gets essentials
                 BuildEssentialSystems(scene);
                 break;
         }
 
-        Debug.Log($"[SceneAutoBuilder] ✓ {scene.name} built successfully");
+        Debug.Log($"[SceneAutoBuilder] ✓ Scene '{scene.name}' complete.");
     }
 
     private void CleanupPreviousBuild(Scene scene)
@@ -138,7 +150,6 @@ public class SceneAutoBuilder : MonoBehaviour
         var bootObj = new GameObject("[AUTO] Boot Systems");
         bootObj.AddComponent<Bootstrapper>()._initializeOnAwake = true;
         
-        // Spawn core managers
         var gameManager = new GameObject("[AUTO] GameManager");
         gameManager.AddComponent<GameManager>();
         gameManager.AddComponent<SaveManager>();
@@ -158,12 +169,10 @@ public class SceneAutoBuilder : MonoBehaviour
         gameManager.AddComponent<BackendClient>();
         gameManager.AddComponent<NetworkManagerSetup>();
         
-        // Event system
         var evt = new GameObject("[AUTO] EventSystem");
         evt.AddComponent<UnityEngine.EventSystems.EventSystem>();
         evt.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         
-        // Show splash/loading
         CreateSplashScreen(scene);
     }
 
@@ -171,11 +180,8 @@ public class SceneAutoBuilder : MonoBehaviour
     {
         var canvas = CreateCanvas(scene, "SplashCanvas", 0);
         
-        // Try to load the actual splash screen image from your AI art
         var splashTexture = Resources.Load<Texture2D>("UI/Sprites/splash_screen");
-        Color bgColor = splashTexture != null ? Color.white : new Color(0.039f, 0.086f, 0.157f, 1);
-        
-        var bg = CreateImage(canvas.transform, "SplashBG", bgColor, 
+        var bg = CreateImage(canvas.transform, "SplashBG", new Color(0.039f, 0.086f, 0.157f, 1f), 
             new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
         
         if (splashTexture != null)
@@ -184,16 +190,14 @@ public class SceneAutoBuilder : MonoBehaviour
             img.sprite = Sprite.Create(splashTexture, new Rect(0, 0, splashTexture.width, splashTexture.height), new Vector2(0.5f, 0.5f));
             img.type = Image.Type.Simple;
             img.preserveAspect = true;
-            Debug.Log("[SceneAutoBuilder] Loaded splash screen art!");
         }
         
-        // Try to load the actual logo from your AI art
         var logoTexture = Resources.Load<Texture2D>("UI/Sprites/arena_fall_logo");
         var logo = CreateImage(bg.transform, "Logo", Color.white,
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         var rt = logo.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(400, 180);
-        rt.anchoredPosition = new Vector2(0, 0);
+        rt.sizeDelta = new Vector2(480, 210);
+        rt.anchoredPosition = Vector2.zero;
         
         if (logoTexture != null)
         {
@@ -201,22 +205,19 @@ public class SceneAutoBuilder : MonoBehaviour
             logoImg.sprite = Sprite.Create(logoTexture, new Rect(0, 0, logoTexture.width, logoTexture.height), new Vector2(0.5f, 0.5f));
             logoImg.type = Image.Type.Simple;
             logoImg.preserveAspect = true;
-            Debug.Log("[SceneAutoBuilder] Loaded logo art!");
         }
         
-        // Loading text
-        var loadingText = CreateText(bg.transform, "LoadingText", "INITIALIZING...", 24, Color.gray,
+        var loadingText = CreateText(bg.transform, "LoadingText", "INITIALIZING ARENA FALL...", 20, HolographicCyan,
             new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
         var lrt = loadingText.GetComponent<RectTransform>();
-        lrt.anchoredPosition = new Vector2(0, 40);
+        lrt.anchoredPosition = new Vector2(0, 50);
         
-        // Auto-transition to Login after brief delay
         var loader = bg.AddComponent<AutoSceneLoader>();
         loader.sceneName = "Login";
-        loader.delay = 2f;
+        loader.delay = 1.8f;
     }
 
-    // ─── MAIN MENU ─────────────────────────────────────────────
+    // ─── MAIN MENU (CLEAN GLASSMORPHIC SCI-FI LAYOUT) ───────────
     private void BuildMainMenuScene(Scene scene)
     {
         BuildEssentialSystems(scene);
@@ -225,17 +226,13 @@ public class SceneAutoBuilder : MonoBehaviour
         var canvas = CreateCanvas(scene, "MainMenuCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
         
-        // Try to load your AI-generated menu background
         var bgTexture = Resources.Load<Texture2D>("Art/Environment/skybox_concept");
         var logoTexture = Resources.Load<Texture2D>("UI/Sprites/arena_fall_logo");
-        var iconAtlas = Resources.Load<Texture2D>("UI/Icons/ui_icons_atlas");
         
-        // Dark background with AI art overlay
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f),
             new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
         
-        // Background image overlay — your AI art if available
-        var bgOverlay = CreateImage(bg.transform, "BGEffects", new Color(1, 1, 1, 0.4f),
+        var bgOverlay = CreateImage(bg.transform, "BGEffects", new Color(1, 1, 1, 0.45f),
             new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
         if (bgTexture != null)
         {
@@ -243,15 +240,87 @@ public class SceneAutoBuilder : MonoBehaviour
             bgImg.sprite = Sprite.Create(bgTexture, new Rect(0, 0, bgTexture.width, bgTexture.height), new Vector2(0.5f, 0.5f));
             bgImg.type = Image.Type.Simple;
             bgImg.preserveAspect = false;
-            Debug.Log("[SceneAutoBuilder] MainMenu: Loaded background art!");
         }
-        // Dark overlay for readability
-        var darkOverlay = CreateImage(bg.transform, "DarkOverlay", new Color(0, 0, 0, 0.6f),
+        
+        CreateImage(bg.transform, "DarkOverlay", new Color(0, 0, 0, 0.55f),
             new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
         
-        // Logo — your AI generated logo
+        // ─── 1. TOP HEADER (PLAYER PROFILE & CURRENCIES) ────
+        var topHeader = CreatePanel(bg.transform, "TopHeaderBar", DeepNavyBg,
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1));
+        var thRt = topHeader.GetComponent<RectTransform>();
+        thRt.sizeDelta = new Vector2(0, 68);
+        thRt.anchoredPosition = Vector2.zero;
+
+        // Fetch dynamic profile fields
+        string playerName = SaveManager.Instance?.GetPlayerName() ?? BackendClient.Instance?.CachedProfile?.playerName ?? "VANGUARD-01";
+        int level = SaveManager.Instance?.CurrentSave?.level ?? BackendClient.Instance?.CachedProfile?.level ?? 1;
+        int credits = SaveManager.Instance?.CurrentSave?.credits ?? BackendClient.Instance?.CachedProfile?.credits ?? 0;
+        int premium = SaveManager.Instance?.CurrentSave?.premiumCurrency ?? BackendClient.Instance?.CachedProfile?.premiumCurrency ?? 0;
+        int wins = SaveManager.Instance?.CurrentSave?.stats?.wins ?? 0;
+        string rankTitle = wins >= 10 ? "GRANDMASTER" : (level >= 10 ? "HEROIC" : "RECRUIT");
+
+        // Player Profile Card
+        var profileBox = CreatePanel(topHeader.transform, "ProfileBox", SteelBlueCard,
+            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        var pRt = profileBox.GetComponent<RectTransform>();
+        pRt.sizeDelta = new Vector2(280, 52);
+        pRt.anchoredPosition = new Vector2(15, 0);
+
+        var pName = CreateText(profileBox.transform, "PName", playerName.ToUpper(), 15, Color.white,
+            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        var pnRt = pName.GetComponent<RectTransform>();
+        pnRt.anchoredPosition = new Vector2(10, 8);
+
+        var pLvl = CreateText(profileBox.transform, "PLvl", $"⚡ {rankTitle} | LVL {level}", 11, HolographicCyan,
+            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        var plRt = pLvl.GetComponent<RectTransform>();
+        plRt.anchoredPosition = new Vector2(10, -10);
+
+        // Currency Counters
+        var goldPill = CreatePanel(topHeader.transform, "GoldPill", SteelBlueCard,
+            new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        var gRt = goldPill.GetComponent<RectTransform>();
+        gRt.sizeDelta = new Vector2(140, 38);
+        gRt.anchoredPosition = new Vector2(-230, 0);
+        CreateText(goldPill.transform, "GText", $"🪙 {credits:N0}", 13, NeonOrangeAccent, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        var diamondPill = CreatePanel(topHeader.transform, "DiamondPill", SteelBlueCard,
+            new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
+        var dRt = diamondPill.GetComponent<RectTransform>();
+        dRt.sizeDelta = new Vector2(130, 38);
+        dRt.anchoredPosition = new Vector2(-85, 0);
+        CreateText(diamondPill.transform, "DText", $"💎 {premium:N0}", 13, HolographicCyan, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+
+        CreateMenuButton(topHeader.transform, "SettingsTopBtn", "⚙", 18, ButtonStyle.Tertiary,
+            new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f),
+            new Vector2(-18, 0), new Vector2(42, 38), () => LoadSceneSafely("Settings"));
+
+        // ─── 2. LEFT SIDE NAVIGATION RAIL ──────────────────────────
+        var leftDock = CreatePanel(bg.transform, "LeftDockRail", new Color(0, 0, 0, 0),
+            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        var ldRt = leftDock.GetComponent<RectTransform>();
+        ldRt.anchoredPosition = new Vector2(120, -20);
+        ldRt.sizeDelta = new Vector2(190, 480);
+
+        string[] dockLabels = { "🛒 STORE", "🎁 BATTLE PASS", "👤 CHARACTERS", "🔫 ARMORY", "🐾 PETS & MASTERY", "🛡️ GUILD", "🏆 CAREER STATS" };
+        for (int i = 0; i < dockLabels.Length; i++)
+        {
+            string label = dockLabels[i];
+            float yPos = 180 - (i * 60);
+            CreateMenuButton(leftDock.transform, $"DockBtn_{i}", label, 13, ButtonStyle.Secondary,
+                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2(0, yPos), new Vector2(180, 48), () => {
+                    if (label.Contains("STORE") || label.Contains("PASS")) LoadSceneSafely("Customization");
+                    else if (label.Contains("ARMORY")) LoadSceneSafely("Loadout");
+                    else if (label.Contains("CAREER") || label.Contains("CHARACTERS")) LoadSceneSafely("Profile");
+                    else LoadSceneSafely("Customization");
+                });
+        }
+
+        // ─── 3. CENTER BRANDING LOGO ────────────────────────────────
         var logo = CreateImage(bg.transform, "Logo", Color.white,
-            new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+            new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         var lrt = logo.GetComponent<RectTransform>();
         lrt.sizeDelta = new Vector2(500, 200);
         if (logoTexture != null)
@@ -260,137 +329,43 @@ public class SceneAutoBuilder : MonoBehaviour
             logoImg.sprite = Sprite.Create(logoTexture, new Rect(0, 0, logoTexture.width, logoTexture.height), new Vector2(0.5f, 0.5f));
             logoImg.type = Image.Type.Simple;
             logoImg.preserveAspect = true;
-            Debug.Log("[SceneAutoBuilder] MainMenu: Loaded logo art!");
         }
-        
-        // Player info bar at top
-        var infoBar = CreatePanel(bg.transform, "PlayerInfoBar", new Color(0.02f, 0.04f, 0.08f, 0.8f),
-            new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1));
-        var irt = infoBar.GetComponent<RectTransform>();
-        irt.sizeDelta = new Vector2(0, 50);
-        irt.anchoredPosition = new Vector2(0, 0);
-        
-        var playerName = CreateText(infoBar.transform, "PlayerName", "VANGUARD-01", 18, Color.white,
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var nrt = playerName.GetComponent<RectTransform>();
-        nrt.anchoredPosition = new Vector2(20, 0);
-        
-        var levelText = CreateText(infoBar.transform, "LevelText", "LVL 1", 14, new Color(0, 0.83f, 1, 1),
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var lvrt = levelText.GetComponent<RectTransform>();
-        lvrt.anchoredPosition = new Vector2(200, 0);
-        
-        var creditsText = CreateText(infoBar.transform, "CreditsText", "1,000", 14, new Color(1, 0.42f, 0.21f, 1),
-            new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-        var crt = creditsText.GetComponent<RectTransform>();
-        crt.anchoredPosition = new Vector2(-20, 0);
-        
-        // === MODERN BATTLE ROYALE MENU LAYOUT ===
-        // Left side: Main navigation buttons (vertical stack)
-        var leftPanel = CreatePanel(bg.transform, "NavPanel", new Color(0, 0, 0, 0),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var lpanelR = leftPanel.GetComponent<RectTransform>();
-        lpanelR.anchoredPosition = new Vector2(-240, -40);
-        lpanelR.sizeDelta = new Vector2(340, 420);
-        
-        // Play button — LARGE, primary
-        CreateMenuButton(lpanelR.transform, "PlayButton", "🚀 FIND MATCH (ONLINE LOBBY)", 20, ButtonStyle.Primary, 
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -10), new Vector2(320, 75), () => {
-                SceneManager.LoadScene("Lobby");
+
+        // ─── 4. BOTTOM RIGHT MATCH ACTION CORNER ───────────────────
+        var modeSelector = CreatePanel(bg.transform, "ModeSelectorBox", SteelBlueCard,
+            new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0));
+        var msRt = modeSelector.GetComponent<RectTransform>();
+        msRt.sizeDelta = new Vector2(290, 52);
+        msRt.anchoredPosition = new Vector2(-20, 138);
+
+        int maxMatchPlayers = MatchManager.Instance != null ? MatchManager.Instance.TotalPlayerCount : 60;
+        CreateText(modeSelector.transform, "ModeTxt", "BATTLE ROYALE (NEXUS TOWER)", 14, Color.white,
+            new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f));
+        CreateText(modeSelector.transform, "SubTxt", $"SOLO / DUO / SQUAD ({maxMatchPlayers} PLAYERS)", 10, HolographicCyan,
+            new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f));
+
+        // PRIMARY CTA START BUTTON
+        CreateMenuButton(bg.transform, "StartMatchBtn", "🚀 FIND MATCH", 24, ButtonStyle.Primary,
+            new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0),
+            new Vector2(-20, 30), new Vector2(290, 92), () => {
+                if (NetworkManagerSetup.Instance != null) NetworkManagerSetup.Instance.StartHost();
+                LoadSceneSafely("GameMap");
             });
-        
-        // Mode buttons
-        CreateMenuButton(lpanelR.transform, "SoloButton", "🤖 SOLO PRACTICE (VS BOTS)", 18, ButtonStyle.Secondary,
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -95), new Vector2(320, 55), () => {
-                SceneManager.LoadScene("GameMap");
-            });
-        
-        CreateMenuButton(lpanelR.transform, "DuosButton", "👥 DUOS MATCHMAKING", 18, ButtonStyle.Secondary,
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -160), new Vector2(320, 55), () => {
-                if (BackendClient.Instance != null) BackendClient.Instance.JoinMatchmakingQueue("Battle Royale (Duos)", null);
-                SceneManager.LoadScene("Matchmaking");
-            });
-        
-        CreateMenuButton(lpanelR.transform, "SquadsButton", "🎖️ SQUADS MATCHMAKING", 18, ButtonStyle.Secondary,
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -225), new Vector2(320, 55), () => {
-                if (BackendClient.Instance != null) BackendClient.Instance.JoinMatchmakingQueue("Battle Royale (Squads)", null);
-                SceneManager.LoadScene("Matchmaking");
-            });
-        
-        // Right side: Secondary actions
-        var rightPanel = CreatePanel(bg.transform, "ActionPanel", new Color(0, 0, 0, 0),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var rpanelR = rightPanel.GetComponent<RectTransform>();
-        rpanelR.anchoredPosition = new Vector2(240, -40);
-        rpanelR.sizeDelta = new Vector2(340, 420);
-        
-        CreateMenuButton(rpanelR.transform, "TrainingButton", "🎯 SHOOTING RANGE (TRAINING)", 18, ButtonStyle.Tertiary,
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -10), new Vector2(320, 55), () => {
-                SceneManager.LoadScene("TrainingGround");
-            });
-        
-        CreateMenuButton(rpanelR.transform, "CustomizeButton", "👕 SKINS & CUSTOMIZE", 18, ButtonStyle.Tertiary,
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -75), new Vector2(320, 55), () => {
-                SceneManager.LoadScene("Customization");
-            });
-        
-        CreateMenuButton(rpanelR.transform, "LoadoutButton", "🔫 WEAPON ARMORY (LOADOUT)", 18, ButtonStyle.Tertiary,
-            new Vector2(0, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1),
-            new Vector2(0, -140), new Vector2(320, 55), () => {
-                SceneManager.LoadScene("Loadout");
-            });
-        
-        // Bottom bar
-        var bottomBar = CreatePanel(bg.transform, "BottomBar", new Color(0.02f, 0.04f, 0.08f, 0.9f),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 0));
-        var brt = bottomBar.GetComponent<RectTransform>();
-        brt.sizeDelta = new Vector2(0, 60);
-        
-        CreateMenuButton(bottomBar.transform, "ShopButton", "SHOP", 16, ButtonStyle.Tertiary,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(-100, 0), new Vector2(140, 40), () => {
-                SceneManager.LoadScene("Customization");
-            });
-        
-        CreateMenuButton(bottomBar.transform, "BattlePassButton", "BATTLE PASS", 16, ButtonStyle.Accent,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-            new Vector2(100, 0), new Vector2(180, 40), () => {
-                SceneManager.LoadScene("Profile");
-            });
-        
-        CreateMenuButton(bottomBar.transform, "SettingsButton", "⚙", 20, ButtonStyle.Tertiary,
-            new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f),
-            new Vector2(-20, 0), new Vector2(50, 40), () => {
-                SceneManager.LoadScene("Settings");
-            });
-        
-        CreateMenuButton(bottomBar.transform, "QuitButton", "✕", 18, ButtonStyle.Danger,
-            new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f),
-            new Vector2(-80, 0), new Vector2(40, 40), () => {
-                #if UNITY_EDITOR
-                UnityEditor.EditorApplication.isPlaying = false;
-                #else
-                Application.Quit();
-                #endif
-            });
+
+        // Practice Shooting Range
+        CreateMenuButton(bg.transform, "TrainingBtn", "🎯 RANGE", 14, ButtonStyle.Tertiary,
+            new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0), new Vector2(1, 0),
+            new Vector2(-320, 30), new Vector2(115, 92), () => LoadSceneSafely("TrainingGround"));
     }
 
-    // ─── GAME MAP (Battle Royale) ──────────────────────────────
+    // ─── GAME MAP (ACTIVE BATTLE ROYALE GAMEPLAY) ────────────────
     private void BuildGameMapScene(Scene scene)
     {
-        // 1. Initialize NetworkManager & UnityTransport for Online Multiplayer / Dedicated Headless Server
         if (NetworkManagerSetup.Instance != null)
         {
             NetworkManagerSetup.Instance.InitializeNetcode();
         }
 
-        // 2. Create Terrain
         var terrainObj = new GameObject("[AUTO] Terrain");
         var terrain = terrainObj.AddComponent<Terrain>();
         var terrainData = new TerrainData();
@@ -401,430 +376,152 @@ public class SceneAutoBuilder : MonoBehaviour
         var terrainCollider = terrainObj.AddComponent<TerrainCollider>();
         terrainCollider.terrainData = terrainData;
 
-        // 3. Construct 6 Compound POIs & Infrastructure using AI Architectural Art & 3D Geometry
         MapPOIBuilder.BuildFullBattleRoyaleMap(terrainObj);
         
-        // 4. Directional Light
         var lightObj = new GameObject("[AUTO] Directional Light");
         var light = lightObj.AddComponent<Light>();
         light.type = LightType.Directional;
-        light.color = new Color(0.9f, 0.85f, 0.75f);
-        light.intensity = 1.2f;
-        lightObj.transform.rotation = Quaternion.Euler(40, 120, 0);
+        light.color = new Color(0.95f, 0.88f, 0.75f);
+        light.intensity = 1.25f;
+        lightObj.transform.rotation = Quaternion.Euler(42, 125, 0);
         light.shadows = LightShadows.Soft;
         
-        // 5. Player Spawn at Nexus Tower Central Hub
         var playerObj = new GameObject("[AUTO] Player");
         playerObj.transform.position = new Vector3(2000, 12, 2000);
         
         var cc = playerObj.AddComponent<CharacterController>();
-        cc.height = 2;
-        cc.radius = 0.4f;
-        cc.center = new Vector3(0, 1, 0);
+        cc.height = 2; cc.radius = 0.4f; cc.center = new Vector3(0, 1, 0);
         
-        var controller = playerObj.AddComponent<PlayerCharacterController>();
+        playerObj.AddComponent<PlayerCharacterController>();
         var health = playerObj.AddComponent<CharacterHealth>();
         var inventory = playerObj.AddComponent<Inventory>();
 
-        // Build 3D Character Rig for Player with glowing cyan visor & armor vest
-        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "Player3DRig", true, new Color(0f, 0.83f, 1f));
+        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "Player3DRig", true, HolographicCyan);
 
-        // Equip starting weapon (`pc90_plasma_cannon` or `a17_striker`)
         var weaponObj = new GameObject("EquippedWeapon");
         weaponObj.transform.SetParent(playerObj.transform);
         var wc = weaponObj.AddComponent<WeaponController>();
         var wData = ScriptableObject.CreateInstance<WeaponData>();
-        wData.weaponId = "pc90_plasma_cannon";
-        wData.weaponName = "PC-90 Plasma Cannon";
-        wData.baseDamage = 38f;
+        wData.weaponId = "a17_striker";
+        wData.weaponName = "A17 Striker Assault";
+        wData.baseDamage = 35f;
         wData.magazineSize = 30;
         wData.maxReserveAmmo = 180;
         wc.Equip(wData);
         
-        // 6. Camera
         var camObj = new GameObject("[AUTO] MainCamera");
         var cam = camObj.AddComponent<Camera>();
-        cam.fieldOfView = 70;
-        cam.nearClipPlane = 0.1f;
-        cam.farClipPlane = 5000;
-        camObj.tag = "MainCamera";
-        camObj.AddComponent<AudioListener>();
+        cam.fieldOfView = 70; cam.nearClipPlane = 0.1f; cam.farClipPlane = 5000;
+        camObj.tag = "MainCamera"; camObj.AddComponent<AudioListener>();
         
         var camManager = FindObjectOfType<CameraManager>();
-        if (camManager != null)
-        {
-            camManager.SetTarget(playerObj.transform);
-        }
+        if (camManager != null) camManager.SetTarget(playerObj.transform);
         
-        // 7. Safe Zone
         var zoneObj = new GameObject("[AUTO] SafeZone");
         zoneObj.AddComponent<SafeZone>();
         
-        var audioSource = playerObj.AddComponent<AudioSource>();
-        audioSource.spatialBlend = 1;
+        playerObj.AddComponent<AudioSource>().spatialBlend = 1;
         
-        // 8. HUD
         BuildHUD(scene);
         
-        // 9. Spawn 3D Rigged AI Bots & Drivable Vehicles
         SpawnAIBots();
         SpawnLoot();
         
-        // 10. Event System
         var evt = new GameObject("[AUTO] EventSystem");
         evt.AddComponent<UnityEngine.EventSystems.EventSystem>();
         evt.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
     }
 
-    // ─── HUD ──────────────────────────────────────────────────
+    // ─── HUD (IN-GAME BATTLE ROYALE HUD) ──────────────────────────
     private void BuildHUD(Scene scene)
     {
         var canvas = CreateCanvas(scene, "HUDCanvas", 10);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
         
-        // === TOP BAR ===
-        var topBar = CreatePanel(canvas.transform, "TopBar", new Color(0, 0, 0, 0.5f),
-            new Vector2(0, 1), new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 1));
-        var tbrt = topBar.GetComponent<RectTransform>();
-        tbrt.sizeDelta = new Vector2(0, 50);
-        
-        // Player count
-        var pCount = CreateText(topBar.transform, "PlayerCount", "ALIVE: 60", 14, Color.white,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        
-        // Minimap (top right) — using your AI HUD art
-        var minimap = CreatePanel(canvas.transform, "Minimap", new Color(0, 0, 0, 0.6f),
+        int aliveCount = MatchManager.Instance != null ? MatchManager.Instance.AlivePlayerCount : 60;
+        string playerId = SaveManager.Instance?.CurrentSave?.playerId ?? "local";
+        int killsCount = MatchManager.Instance != null ? MatchManager.Instance.GetPlayerKills(playerId) : 0;
+
+        // Match Stats Box
+        var matchInfoBox = CreatePanel(canvas.transform, "AF_MatchInfoBox", DeepNavyBg,
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1));
+        var miRt = matchInfoBox.GetComponent<RectTransform>();
+        miRt.sizeDelta = new Vector2(240, 50);
+        miRt.anchoredPosition = new Vector2(15, -15);
+
+        CreateText(matchInfoBox.transform, "AliveTxt", $"ALIVE: {aliveCount}", 14, Color.white,
+            new Vector2(0.28f, 0.5f), new Vector2(0.28f, 0.5f), new Vector2(0.28f, 0.5f), new Vector2(0.28f, 0.5f));
+
+        CreateText(matchInfoBox.transform, "KillsTxt", $"KILLS: {killsCount}", 14, HolographicCyan,
+            new Vector2(0.75f, 0.5f), new Vector2(0.75f, 0.5f), new Vector2(0.75f, 0.5f), new Vector2(0.75f, 0.5f));
+
+        // Top-Right Minimap Frame
+        var minimap = CreatePanel(canvas.transform, "Minimap", DeepNavyBg,
             new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
         var mrt = minimap.GetComponent<RectTransform>();
-        mrt.sizeDelta = new Vector2(180, 180);
+        mrt.sizeDelta = new Vector2(175, 175);
         mrt.anchoredPosition = new Vector2(-15, -15);
         
-        // Try loading the modern BR HUD background for minimap
-        var hudTex = Resources.Load<Texture2D>("UI/Sprites/modern_br_hud");
-        var hudElementsTex = Resources.Load<Texture2D>("UI/Sprites/hud_elements");
-        
-        // Minimap border — from your AI HUD elements
-        var mmBorder = CreateImage(minimap.transform, "MinimapBorder", new Color(0, 0.83f, 1, 0.5f),
+        var mmBorder = CreateImage(minimap.transform, "MinimapBorder", HolographicCyan,
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
         var brt2 = mmBorder.GetComponent<RectTransform>();
-        brt2.sizeDelta = new Vector2(178, 178);
-        if (hudElementsTex != null)
-        {
-            var borderImg = mmBorder.GetComponent<Image>();
-            borderImg.sprite = Sprite.Create(hudElementsTex, new Rect(0, 0, 64, 64), new Vector2(0.5f, 0.5f));
-            borderImg.type = Image.Type.Sliced;
-            Debug.Log("[SceneAutoBuilder] HUD: Loaded minimap border art!");
-        }
-        else
-        {
-            mmBorder.GetComponent<Image>().fillCenter = false;
-            mmBorder.GetComponent<Image>().type = Image.Type.Sliced;
-        }
+        brt2.sizeDelta = new Vector2(173, 173);
+        mmBorder.GetComponent<Image>().fillCenter = false;
         
-        // Compass bar (top center area)
-        var compass = CreatePanel(canvas.transform, "CompassBar", new Color(0, 0, 0, 0.4f),
-            new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        var crt2 = compass.GetComponent<RectTransform>();
-        crt2.sizeDelta = new Vector2(400, 20);
-        crt2.anchoredPosition = new Vector2(0, -60);
-        
-        // Compass text labels
-        string[] dirs = { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
-        for (int i = 0; i < 8; i++)
-        {
-            float xPos = -175 + (i * 50);
-            var dirText = CreateText(compass.transform, dirs[i], dirs[i], 10, Color.white,
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            var drt = dirText.GetComponent<RectTransform>();
-            drt.anchoredPosition = new Vector2(xPos, 0);
-        }
-        
-        // === BOTTOM CENTER ===
-        // Health panel
-        var healthPanel = CreatePanel(canvas.transform, "HealthPanel", new Color(0, 0, 0, 0),
+        // HP & Shield Container
+        var hpBox = CreatePanel(canvas.transform, "AF_HealthBox", DeepNavyBg,
             new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-        var hprt = healthPanel.GetComponent<RectTransform>();
-        hprt.sizeDelta = new Vector2(350, 100);
-        hprt.anchoredPosition = new Vector2(0, 30);
-        
-        // Health bar
-        var healthBarBg = CreateImage(healthPanel.transform, "HealthBarBG", new Color(0.2f, 0.2f, 0.2f, 0.6f),
+        var hRt = hpBox.GetComponent<RectTransform>();
+        hRt.sizeDelta = new Vector2(270, 44);
+        hRt.anchoredPosition = new Vector2(0, 25);
+
+        // EP Shield Gauge (Cyan)
+        var epBarBg = CreateImage(hpBox.transform, "EPBarBG", new Color(0.1f, 0.15f, 0.25f, 0.85f),
+            new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f));
+        epBarBg.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 6);
+
+        var epFill = CreateImage(epBarBg.transform, "EPFill", HolographicCyan,
+            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        epFill.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 6);
+        epFill.GetComponent<Image>().type = Image.Type.Filled;
+
+        // HP Gauge (Green)
+        var hpBarBg = CreateImage(hpBox.transform, "HPBarBG", new Color(0.1f, 0.15f, 0.25f, 0.85f),
+            new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f));
+        hpBarBg.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 15);
+
+        var hpFill = CreateImage(hpBarBg.transform, "HPFill", SuccessGreen,
+            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
+        hpFill.GetComponent<RectTransform>().sizeDelta = new Vector2(250, 15);
+        hpFill.GetComponent<Image>().type = Image.Type.Filled;
+
+        CreateText(hpBarBg.transform, "HPTxt", "HP  200 / 200", 12, Color.white,
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var hbrt = healthBarBg.GetComponent<RectTransform>();
-        hbrt.sizeDelta = new Vector2(200, 14);
-        hbrt.anchoredPosition = new Vector2(0, 15);
-        
-        var healthBar = CreateImage(healthBarBg.transform, "HealthBarFill", new Color(0.27f, 0.85f, 0.27f, 1),
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var hfrt = healthBar.GetComponent<RectTransform>();
-        hfrt.sizeDelta = new Vector2(200, 14);
-        hfrt.GetComponent<Image>().type = Image.Type.Filled;
-        hfrt.GetComponent<Image>().fillMethod = Image.FillMethod.Horizontal;
-        
-        var hpText = CreateText(healthBarBg.transform, "HPText", "100", 12, Color.white,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        
-        // Shield bar
-        var shieldBarBg = CreateImage(healthPanel.transform, "ShieldBarBG", new Color(0.2f, 0.2f, 0.2f, 0.6f),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var sbrt = shieldBarBg.GetComponent<RectTransform>();
-        sbrt.sizeDelta = new Vector2(200, 10);
-        sbrt.anchoredPosition = new Vector2(0, 0);
-        
-        var shieldBar = CreateImage(shieldBarBg.transform, "ShieldBarFill", new Color(0, 0.83f, 1, 1),
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var sfrt = shieldBar.GetComponent<RectTransform>();
-        sfrt.sizeDelta = new Vector2(200, 10);
-        sfrt.GetComponent<Image>().type = Image.Type.Filled;
-        sfrt.GetComponent<Image>().fillMethod = Image.FillMethod.Horizontal;
-        
-        // Weapon display — shows your AI weapon art!
-        var weaponPanel = CreatePanel(healthPanel.transform, "WeaponDisplay", new Color(0, 0, 0, 0.5f),
-            new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
-        var wprt = weaponPanel.GetComponent<RectTransform>();
-        wprt.sizeDelta = new Vector2(320, 70);
-        wprt.anchoredPosition = new Vector2(0, -50);
-        
-        // Weapon icon — using your AI assault rifle art
-        var weaponIcon = CreateImage(weaponPanel.transform, "WeaponIcon", Color.white,
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var wirt = weaponIcon.GetComponent<RectTransform>();
-        wirt.sizeDelta = new Vector2(80, 50);
-        wirt.anchoredPosition = new Vector2(10, 0);
-        var weaponArtTex = Resources.Load<Texture2D>("Art/Weapons/AssaultRifles/a17_striker");
-        if (weaponArtTex != null)
-        {
-            var wImg = weaponIcon.GetComponent<Image>();
-            wImg.sprite = Sprite.Create(weaponArtTex, new Rect(0, 0, weaponArtTex.width, weaponArtTex.height), new Vector2(0.5f, 0.5f));
-            wImg.type = Image.Type.Simple;
-            wImg.preserveAspect = true;
-        }
-        
-        var weaponName = CreateText(weaponPanel.transform, "WeaponName", "PC-90 PLASMA CANNON", 16, Color.white,
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var wnrt = weaponName.GetComponent<RectTransform>();
-        wnrt.anchoredPosition = new Vector2(100, 10);
-        
-        var ammoText = CreateText(weaponPanel.transform, "AmmoText", "30 / 120", 22, Color.white,
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-        var art2 = ammoText.GetComponent<RectTransform>();
-        art2.anchoredPosition = new Vector2(100, -15);
-        
-        // === RIGHT SIDE ===
-        // Kill feed
-        var killFeed = CreatePanel(canvas.transform, "KillFeed", new Color(0, 0, 0, 0),
-            new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1), new Vector2(1, 1));
-        var kfrt = killFeed.GetComponent<RectTransform>();
-        kfrt.sizeDelta = new Vector2(300, 200);
-        kfrt.anchoredPosition = new Vector2(-210, -80);
-        
-        // Crosshair (center) — using your AI crosshair asset
+
+        // Reticle Crosshair
         var crosshairPanel = CreatePanel(canvas.transform, "Crosshair", new Color(0, 0, 0, 0),
             new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var crt3 = crosshairPanel.GetComponent<RectTransform>();
-        crt3.sizeDelta = new Vector2(48, 48);
-        
-        // Try loading your AI crosshair sprite
-        var crosshairTex = Resources.Load<Texture2D>("UI/Sprites/crosshairs");
-        if (crosshairTex != null)
+        crosshairPanel.GetComponent<RectTransform>().sizeDelta = new Vector2(40, 40);
+
+        var dot = CreateImage(crosshairPanel.transform, "CenterDot", NeonOrangeAccent,
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
+        dot.GetComponent<RectTransform>().sizeDelta = new Vector2(4, 4);
+
+        for (int i = 0; i < 4; i++)
         {
-            var crossImg = crosshairPanel.AddComponent<Image>();
-            crossImg.sprite = Sprite.Create(crosshairTex, new Rect(0, 0, 48, 48), new Vector2(0.5f, 0.5f));
-            crossImg.type = Image.Type.Simple;
-            crossImg.color = new Color(0, 0.83f, 1, 0.9f);
-            Debug.Log("[SceneAutoBuilder] HUD: Loaded crosshair art!");
-        }
-        else
-        {
-            // Fallback: procedural crosshair
-            // Center dot
-            var dot = CreateImage(crosshairPanel.transform, "CenterDot", new Color(0, 0.83f, 1, 0.8f),
+            var line = CreateImage(crosshairPanel.transform, $"Line{i}", HolographicCyan,
                 new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            var drt2 = dot.GetComponent<RectTransform>();
-            drt2.sizeDelta = new Vector2(3, 3);
-            
-            // Cross lines
-            for (int i = 0; i < 4; i++)
-            {
-                var line = CreateImage(crosshairPanel.transform, $"Line{i}", new Color(0, 0.83f, 1, 0.7f),
-                    new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-                var lrt = line.GetComponent<RectTransform>();
-                float x = i < 2 ? 5 : 0;
-                float y = i >= 2 ? 5 : 0;
-                float w = i < 2 ? 10 : 2;
-                float h = i < 2 ? 2 : 10;
-                if (i == 1) x = -8;
-                if (i == 3) y = -8;
-                lrt.anchoredPosition = new Vector2(x, y);
-                lrt.sizeDelta = new Vector2(w, h);
-            }
+            var lrt = line.GetComponent<RectTransform>();
+            float x = i == 0 ? 8 : (i == 1 ? -8 : 0);
+            float y = i == 2 ? 8 : (i == 3 ? -8 : 0);
+            lrt.anchoredPosition = new Vector2(x, y);
+            lrt.sizeDelta = new Vector2(i < 2 ? 8 : 2, i < 2 ? 2 : 8);
         }
-        
-        // Interaction prompt (center bottom)
-        var interact = CreatePanel(canvas.transform, "InteractPrompt", new Color(0, 0, 0, 0.6f),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var irt2 = interact.GetComponent<RectTransform>();
-        irt2.sizeDelta = new Vector2(300, 40);
-        irt2.anchoredPosition = new Vector2(0, -80);
-        interact.SetActive(false);
-        
-        var interactText = CreateText(interact.transform, "InteractText", "Press [F] to pick up", 14, Color.white,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        
-        // Add HUD Controller component to canvas
-        var hudController = canvas.AddComponent<HUDController>();
+
+        canvas.AddComponent<HUDController>();
     }
 
-    // ─── LOBBY ─────────────────────────────────────────────────
-    private void BuildLobbyScene(Scene scene)
-    {
-        BuildEssentialSystems(scene);
-        
-        var canvas = CreateCanvas(scene, "LobbyCanvas", 0);
-        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-        
-        // Try loading terrain or nexus tower as lobby background
-        var lobbyBgTex = Resources.Load<Texture2D>("Art/Environment/terrain_concept");
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        if (lobbyBgTex != null)
-        {
-            var bgImg = bg.GetComponent<Image>();
-            bgImg.sprite = Sprite.Create(lobbyBgTex, new Rect(0, 0, lobbyBgTex.width, lobbyBgTex.height), new Vector2(0.5f, 0.5f));
-            bgImg.type = Image.Type.Simple;
-            bgImg.preserveAspect = false;
-        }
-        var lobbyOverlay = CreateImage(bg.transform, "Overlay", new Color(0, 0, 0, 0.5f),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        
-        // Lobby title
-        var title = CreateText(bg.transform, "Title", "MATCH LOBBY", 32, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        var trt = title.GetComponent<RectTransform>();
-        trt.anchoredPosition = new Vector2(0, -30);
-        
-        // Player list panel
-        var playerList = CreatePanel(bg.transform, "PlayerList", new Color(0, 0, 0, 0.3f),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var plrt = playerList.GetComponent<RectTransform>();
-        plrt.sizeDelta = new Vector2(400, 300);
-        plrt.anchoredPosition = new Vector2(0, 30);
-        
-        // Player entries
-        for (int i = 1; i <= 4; i++)
-        {
-            var entry = CreatePanel(playerList.transform, $"Player{i}", new Color(0.1f, 0.15f, 0.25f, 0.5f),
-                new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-            var entryRt = entry.GetComponent<RectTransform>();
-            entryRt.sizeDelta = new Vector2(360, 50);
-            entryRt.anchoredPosition = new Vector2(0, -10 - ((i - 1) * 55));
-            
-            CreateText(entry.transform, "Name", i == 1 ? "YOU" : $"PLAYER {i}", 16, 
-                i == 1 ? new Color(0, 0.83f, 1, 1) : Color.white,
-                new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-            
-            if (i == 1)
-            {
-                var ready = CreateText(entry.transform, "Status", "READY", 12, new Color(0.27f, 0.85f, 0.27f, 1),
-                    new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f), new Vector2(1, 0.5f));
-                var rrt = ready.GetComponent<RectTransform>();
-                rrt.anchoredPosition = new Vector2(-15, 0);
-            }
-        }
-        
-        // Start button with Matchmaking & Netcode initialization
-        CreateMenuButton(bg.transform, "StartButton", "START MATCH", 22, ButtonStyle.Primary,
-            new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0),
-            new Vector2(0, 40), new Vector2(280, 55), () => {
-                if (BackendClient.Instance != null)
-                {
-                    BackendClient.Instance.JoinMatchmakingQueue("Battle Royale (Solo)", (success, status) => {
-                        Debug.Log($"[Matchmaking] Status: {status?.status ?? "Queued"}");
-                    });
-                }
-                if (NetworkManagerSetup.Instance != null)
-                {
-                    NetworkManagerSetup.Instance.StartHost();
-                }
-                SceneManager.LoadScene("GameMap");
-            });
-        
-        // Back
-        CreateMenuButton(bg.transform, "BackButton", "← BACK", 16, ButtonStyle.Tertiary,
-            new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1),
-            new Vector2(15, -15), new Vector2(100, 35), () => {
-                SceneManager.LoadScene("MainMenu");
-            });
-    }
-
-    // ─── TRAINING ──────────────────────────────────────────────
-    private void BuildTrainingScene(Scene scene)
-    {
-        // Ground plane
-        var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        ground.name = "[AUTO] Ground";
-        ground.transform.localScale = new Vector3(60, 1, 60);
-        ground.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-        ground.GetComponent<MeshRenderer>().material.color = new Color(0.2f, 0.25f, 0.32f);
-        
-        // Player
-        var playerObj = new GameObject("[AUTO] Player");
-        playerObj.transform.position = new Vector3(0, 1, 0);
-        var cc = playerObj.AddComponent<CharacterController>();
-        cc.height = 2;
-        cc.radius = 0.4f;
-        cc.center = new Vector3(0, 1, 0);
-        playerObj.AddComponent<PlayerCharacterController>();
-        playerObj.AddComponent<CharacterHealth>();
-        playerObj.AddComponent<Inventory>();
-        
-        // Build 3D Character Rig for Player in Training
-        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "PlayerTraining3DRig", true, new Color(0f, 0.83f, 1f));
-        
-        // Target Dummies with 3D Rigs
-        for (int i = 0; i < 5; i++)
-        {
-            var dummy = new GameObject($"[AUTO] TargetDummy_{i}");
-            dummy.transform.position = new Vector3(10 + (i * 5), 1, 8);
-            dummy.AddComponent<CapsuleCollider>().height = 2f;
-            
-            var targetHealth = dummy.AddComponent<CharacterHealth>();
-            Color dummyColor = i % 2 == 0 ? new Color(0.8f, 0.2f, 0.2f) : new Color(0.9f, 0.5f, 0.1f);
-            SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(dummy.transform, $"DummyRig_{i}", false, dummyColor);
-            
-            dummy.AddComponent<RotateAnimation>();
-        }
-        
-        // Camera
-        var camObj = new GameObject("[AUTO] MainCamera");
-        var cam = camObj.AddComponent<Camera>();
-        cam.fieldOfView = 70;
-        camObj.tag = "MainCamera";
-        camObj.AddComponent<AudioListener>();
-        
-        var camManager = FindObjectOfType<CameraManager>();
-        if (camManager != null) camManager.SetTarget(playerObj.transform);
-        
-        // HUD
-        BuildHUD(scene);
-        
-        // Event system
-        var evt = new GameObject("[AUTO] EventSystem");
-        evt.AddComponent<UnityEngine.EventSystems.EventSystem>();
-        evt.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
-        
-        // Back button
-        var canvas = CreateCanvas(scene, "UICanvas", 1);
-        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-        
-        CreateMenuButton(canvas.transform, "BackButton", "← MAIN MENU", 16, ButtonStyle.Tertiary,
-            new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1),
-            new Vector2(15, -15), new Vector2(140, 35), () => {
-                SceneManager.LoadScene("MainMenu");
-            });
-    }
-
-    // ─── RESULT SCREEN ──────────────────────────────────────────
+    // ─── RESULT SCREEN (MATCH SUMMARY) ───────────────────────────
     private void BuildResultScene(Scene scene)
     {
         BuildEssentialSystems(scene);
@@ -832,174 +529,160 @@ public class SceneAutoBuilder : MonoBehaviour
         var canvas = CreateCanvas(scene, "ResultCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
         
-        // Result screen background with AI art
-        var resultBgTex = Resources.Load<Texture2D>("Art/Environment/skybox_concept");
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f),
             new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        if (resultBgTex != null)
-        {
-            var bgImg = bg.GetComponent<Image>();
-            bgImg.sprite = Sprite.Create(resultBgTex, new Rect(0, 0, resultBgTex.width, resultBgTex.height), new Vector2(0.5f, 0.5f));
-            bgImg.type = Image.Type.Simple;
-            bgImg.preserveAspect = false;
-        }
-        var resultOverlay = CreateImage(bg.transform, "Overlay", new Color(0, 0, 0, 0.7f),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        
-        // Result header
-        var header = CreateText(bg.transform, "Header", "MATCH RESULTS", 28, new Color(1, 0.42f, 0.21f, 1),
-            new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        var hrt = header.GetComponent<RectTransform>();
-        hrt.anchoredPosition = new Vector2(0, -40);
-        
-        int kills = MatchManager.Instance != null ? 7 : 5;
-        int damage = MatchManager.Instance != null ? 1420 : 1240;
-        int place = MatchManager.Instance != null ? 1 : 1;
-        float survival = MatchManager.Instance != null ? MatchManager.Instance.MatchElapsedTime : 750f;
+
+        string pId = SaveManager.Instance?.CurrentSave?.playerId ?? "local";
+        int place = MatchManager.Instance != null ? MatchManager.Instance.GetPlayerPlacement(pId) : 1;
+        int kills = MatchManager.Instance != null ? MatchManager.Instance.GetPlayerKills(pId) : 0;
+        int damage = MatchManager.Instance != null ? MatchManager.Instance.GetPlayerDamage(pId) : 0;
+        float survival = MatchManager.Instance != null ? MatchManager.Instance.MatchElapsedTime : 0f;
+        int xpEarned = (kills * 150) + (place == 1 ? 500 : 200);
 
         if (BackendClient.Instance != null)
         {
             BackendClient.Instance.SyncStatsAfterMatch(kills, damage, place, survival);
         }
 
-        // Placement
-        var placement = CreateText(bg.transform, "Placement", $"#{place}", 64, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var prt = placement.GetComponent<RectTransform>();
-        prt.anchoredPosition = new Vector2(0, 60);
-        
-        var placementLabel = CreateText(bg.transform, "PlacementLabel", "PLACEMENT", 14, Color.gray,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var plrt2 = placementLabel.GetComponent<RectTransform>();
-        plrt2.anchoredPosition = new Vector2(0, 20);
-        
-        // Stats grid
-        string[] stats = { "KILLS", "DAMAGE", "SURVIVED", "SCORE" };
-        string[] values = { kills.ToString(), damage.ToString("N0"), $"{(int)(survival/60)}:{(int)(survival%60):D2}", ((kills * 100) + (place == 1 ? 500 : 200)).ToString("N0") };
+        string headerText = place == 1 ? "🏆 VICTORY ROYALE 🏆" : $"PLACEMENT #{place}";
+        CreateText(bg.transform, "VictoryTitle", headerText, 46, HolographicCyan,
+            new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f));
+
+        CreateText(bg.transform, "SubTitle", $"SURVIVAL TIME: {(int)(survival/60)}m {(int)(survival%60)}s | XP EARNED: +{xpEarned:N0}", 15, Color.white,
+            new Vector2(0.5f, 0.76f), new Vector2(0.5f, 0.76f), new Vector2(0.5f, 0.76f), new Vector2(0.5f, 0.76f));
+
+        string[] stats = { "KILLS", "DAMAGE", "SURVIVED", "TOTAL XP" };
+        string[] values = { kills.ToString(), damage.ToString("N0"), $"{(int)(survival/60)}:{(int)(survival%60):D2}", xpEarned.ToString("N0") };
         for (int i = 0; i < 4; i++)
         {
-            var statPanel = CreatePanel(bg.transform, $"Stat_{i}", new Color(0.1f, 0.15f, 0.25f, 0.5f),
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            var srt = statPanel.GetComponent<RectTransform>();
-            srt.sizeDelta = new Vector2(120, 80);
-            srt.anchoredPosition = new Vector2(-190 + (i * 125), -30);
-            
-            CreateText(statPanel.transform, "Value", values[i], 28, Color.white,
-                new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-            
-            CreateText(statPanel.transform, "Label", stats[i], 10, Color.gray,
-                new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0));
+            var statCard = CreatePanel(bg.transform, $"Card_{i}", SteelBlueCard,
+                new Vector2(0.5f, 0.52f), new Vector2(0.5f, 0.52f), new Vector2(0.5f, 0.52f), new Vector2(0.5f, 0.52f));
+            var sRt = statCard.GetComponent<RectTransform>();
+            sRt.sizeDelta = new Vector2(135, 85);
+            sRt.anchoredPosition = new Vector2(-210 + (i * 140), 0);
+
+            CreateText(statCard.transform, "Val", values[i], 26, NeonOrangeAccent, new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f));
+            CreateText(statCard.transform, "Lab", stats[i], 11, Color.gray, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f));
         }
-        
-        // XP earned
-        var xpText = CreateText(bg.transform, "XPEarned", $"+ {(kills * 150) + 350} XP", 20, new Color(0.27f, 0.85f, 0.27f, 1),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var xrt = xpText.GetComponent<RectTransform>();
-        xrt.anchoredPosition = new Vector2(0, -130);
-        
-        // Buttons
-        CreateMenuButton(bg.transform, "LobbyButton", "PLAY AGAIN", 20, ButtonStyle.Primary,
-            new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0),
-            new Vector2(-80, 40), new Vector2(200, 50), () => {
-                SceneManager.LoadScene("GameMap");
-            });
-        
-        CreateMenuButton(bg.transform, "MenuButton", "MAIN MENU", 16, ButtonStyle.Secondary,
-            new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0),
-            new Vector2(110, 40), new Vector2(200, 50), () => {
-                SceneManager.LoadScene("MainMenu");
-            });
+
+        CreateMenuButton(bg.transform, "PlayAgainBtn", "🚀 PLAY AGAIN", 20, ButtonStyle.Primary,
+            new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f),
+            new Vector2(-90, 0), new Vector2(200, 50), () => LoadSceneSafely("GameMap"));
+
+        CreateMenuButton(bg.transform, "MenuBtn", "MAIN MENU", 16, ButtonStyle.Secondary,
+            new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f),
+            new Vector2(120, 0), new Vector2(180, 50), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── SETTINGS ────────────────────────────────────────────────
-    private void BuildSettingsScene(Scene scene)
+    // ─── PROFILE CAREER SCENE (LIVE STATS) ─────────────────────
+    private void BuildProfileScene(Scene scene)
     {
         BuildEssentialSystems(scene);
-        
-        var canvas = CreateCanvas(scene, "SettingsCanvas", 0);
+        var canvas = CreateCanvas(scene, "ProfileCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
         
-        var settingsBgTex = Resources.Load<Texture2D>("Art/Environment/terrain_concept");
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        if (settingsBgTex != null)
+        var save = SaveManager.Instance?.CurrentSave;
+        int wins = save?.stats?.wins ?? 0;
+        int kills = save?.stats?.kills ?? 0;
+        int deaths = save?.stats?.deaths ?? 0;
+        int damage = save?.stats?.damageDealt ?? 0;
+        float kdr = deaths > 0 ? (float)kills / deaths : kills;
+
+        CreateText(bg.transform, "Title", "CAREER STATS & PROGRESSION", 28, HolographicCyan, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
+        
+        string[] labels = { "WINS", "KILLS", "DAMAGE", "K/D RATIO" };
+        string[] values = { wins.ToString("N0"), kills.ToString("N0"), damage.ToString("N0"), kdr.ToString("F2") };
+        for (int i = 0; i < 4; i++)
         {
-            var bgImg = bg.GetComponent<Image>();
-            bgImg.sprite = Sprite.Create(settingsBgTex, new Rect(0, 0, settingsBgTex.width, settingsBgTex.height), new Vector2(0.5f, 0.5f));
-            bgImg.type = Image.Type.Simple;
+            var card = CreatePanel(bg.transform, $"StatCard_{i}", SteelBlueCard, new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f));
+            card.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 100);
+            card.GetComponent<RectTransform>().anchoredPosition = new Vector2(-270 + (i * 180), 0);
+
+            CreateText(card.transform, "Val", values[i], 30, NeonOrangeAccent, new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f));
+            CreateText(card.transform, "Lab", labels[i], 12, Color.gray, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f));
         }
-        var settingsOverlay = CreateImage(bg.transform, "Overlay", new Color(0, 0, 0, 0.6f),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        
-        var title = CreateText(bg.transform, "Title", "SETTINGS", 28, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0.5f, 1));
-        var trt2 = title.GetComponent<RectTransform>();
-        trt2.anchoredPosition = new Vector2(0, -30);
-        
-        // Audio section
-        CreateSettingsSlider(bg.transform, "MasterVolume", "MASTER VOLUME", 0.8f, 0, new Vector2(0, -80));
-        CreateSettingsSlider(bg.transform, "MusicVolume", "MUSIC VOLUME", 0.7f, 1, new Vector2(0, -130));
-        CreateSettingsSlider(bg.transform, "SFXVolume", "SFX VOLUME", 0.8f, 2, new Vector2(0, -180));
-        
-        // Sensitivity
-        CreateSettingsSlider(bg.transform, "Sensitivity", "LOOK SENSITIVITY", 0.5f, 3, new Vector2(0, -240));
-        
-        // Back
-        CreateMenuButton(bg.transform, "BackButton", "← BACK", 18, ButtonStyle.Tertiary,
-            new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0),
-            new Vector2(0, 40), new Vector2(200, 50), () => {
-                SceneManager.LoadScene("MainMenu");
-            });
+
+        CreateMenuButton(bg.transform, "BackBtn", "← BACK TO MAIN MENU", 16, ButtonStyle.Tertiary, new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0, 0), new Vector2(220, 45), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── TEST SCENE ──────────────────────────────────────────────
-    private void BuildTestScene(Scene scene)
+    private void BuildLobbyScene(Scene scene)
+    {
+        BuildEssentialSystems(scene);
+        var canvas = CreateCanvas(scene, "LobbyCanvas", 0);
+        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
+        CreateText(bg.transform, "Title", "MATCH LOBBY", 30, HolographicCyan, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
+        CreateMenuButton(bg.transform, "StartButton", "🚀 START MATCH", 22, ButtonStyle.Primary, new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0, 0), new Vector2(260, 55), () => {
+            if (NetworkManagerSetup.Instance != null) NetworkManagerSetup.Instance.StartHost();
+            LoadSceneSafely("GameMap");
+        });
+        CreateMenuButton(bg.transform, "BackButton", "← BACK", 16, ButtonStyle.Tertiary, new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(20, -20), new Vector2(100, 36), () => LoadSceneSafely("MainMenu"));
+    }
+
+    private void BuildTrainingScene(Scene scene)
     {
         var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
         ground.name = "[AUTO] Ground";
-        ground.transform.localScale = new Vector3(20, 1, 20);
-        ground.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+        ground.transform.localScale = new Vector3(60, 1, 60);
+        ground.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.18f, 0.25f, 0.35f) };
         
-        // Player spawn
         var playerObj = new GameObject("[AUTO] Player");
         playerObj.transform.position = new Vector3(0, 1, 0);
         var cc = playerObj.AddComponent<CharacterController>();
-        cc.height = 2;
-        cc.radius = 0.4f;
-        cc.center = new Vector3(0, 1, 0);
+        cc.height = 2; cc.radius = 0.4f; cc.center = new Vector3(0, 1, 0);
         playerObj.AddComponent<PlayerCharacterController>();
+        playerObj.AddComponent<CharacterHealth>();
+        playerObj.AddComponent<Inventory>();
         
-        // Test cubes
+        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(playerObj.transform, "PlayerTraining3DRig", true, HolographicCyan);
+        
         for (int i = 0; i < 5; i++)
         {
-            var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.name = $"[AUTO] TestCube_{i}";
-            cube.transform.position = new Vector3(-3 + (i * 1.5f), 0.5f, 3);
-            cube.GetComponent<MeshRenderer>().material.color = Color.Lerp(Color.red, Color.blue, i / 4f);
+            var dummy = new GameObject($"[AUTO] TargetDummy_{i}");
+            dummy.transform.position = new Vector3(10 + (i * 5), 1, 8);
+            dummy.AddComponent<CapsuleCollider>().height = 2f;
+            dummy.AddComponent<CharacterHealth>();
+            SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(dummy.transform, $"DummyRig_{i}", false, NeonOrangeAccent);
+            dummy.AddComponent<RotateAnimation>();
         }
         
-        // Camera
         var camObj = new GameObject("[AUTO] MainCamera");
         var cam = camObj.AddComponent<Camera>();
-        cam.fieldOfView = 70;
-        camObj.tag = "MainCamera";
-        camObj.AddComponent<AudioListener>();
-        camObj.transform.position = new Vector3(0, 3, -5);
-        camObj.transform.LookAt(Vector3.zero);
+        cam.fieldOfView = 70; camObj.tag = "MainCamera"; camObj.AddComponent<AudioListener>();
         
         var camManager = FindObjectOfType<CameraManager>();
         if (camManager != null) camManager.SetTarget(playerObj.transform);
         
-        // Event system
+        BuildHUD(scene);
+        
         var evt = new GameObject("[AUTO] EventSystem");
         evt.AddComponent<UnityEngine.EventSystems.EventSystem>();
         evt.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+        
+        var canvas = CreateCanvas(scene, "UICanvas", 1);
+        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+        
+        CreateMenuButton(canvas.transform, "BackButton", "← MAIN MENU", 16, ButtonStyle.Tertiary,
+            new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1), new Vector2(0, 1),
+            new Vector2(15, -15), new Vector2(140, 35), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── AI BOTS ──────────────────────────────────────────────
+    private void BuildSettingsScene(Scene scene)
+    {
+        BuildEssentialSystems(scene);
+        var canvas = CreateCanvas(scene, "SettingsCanvas", 0);
+        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
+        CreateText(bg.transform, "Title", "SETTINGS & CONTROLS", 28, HolographicCyan, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
+        CreateMenuButton(bg.transform, "BackButton", "← BACK", 18, ButtonStyle.Tertiary, new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0, 0), new Vector2(200, 48), () => LoadSceneSafely("MainMenu"));
+    }
+
+    private void BuildTestScene(Scene scene) { }
+
     private void SpawnAIBots()
     {
-        int botCount = 59; // Default 59 bots + 1 human = 60 player lobby
+        int botCount = 59;
         if (BackendClient.Instance != null && BackendClient.Instance.LastMatchBotCount > 0)
         {
             botCount = BackendClient.Instance.LastMatchBotCount;
@@ -1007,308 +690,57 @@ public class SceneAutoBuilder : MonoBehaviour
         SciFiCharacterAndVehicleBuilder.Spawn3DAIBotsAcrossCompounds(botCount);
     }
 
-    // ─── LOOT & VEHICLES ──────────────────────────────────────
     private void SpawnLoot()
     {
         SciFiCharacterAndVehicleBuilder.SpawnDrivableVehiclesAcrossMap();
     }
 
-    // ─── LOGIN & REGISTRATION ──────────────────────────────────
     private void BuildLoginScene(Scene scene)
     {
         BuildEssentialSystems(scene);
         EnsureCoreManagersExist();
 
-        if (BackendClient.Instance != null && BackendClient.Instance.IsAuthenticated)
-        {
-            Debug.Log("[SceneAutoBuilder] Login: Player already authenticated, navigating to MainMenu.");
-            SceneManager.LoadScene("MainMenu");
-            return;
-        }
-
         var canvas = CreateCanvas(scene, "LoginCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
 
-        var bgTex = Resources.Load<Texture2D>("Art/Environment/skybox_concept");
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-        if (bgTex != null)
-        {
-            var bgImg = bg.GetComponent<Image>();
-            bgImg.sprite = Sprite.Create(bgTex, new Rect(0, 0, bgTex.width, bgTex.height), new Vector2(0.5f, 0.5f));
-            bgImg.type = Image.Type.Simple;
-        }
-        CreateImage(bg.transform, "DarkOverlay", new Color(0, 0, 0, 0.75f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
 
-        var title = CreateText(bg.transform, "Title", "ARENA FALL LOGIN", 32, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f));
+        CreateText(bg.transform, "Title", "ARENA FALL LOGIN", 30, HolographicCyan, new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f), new Vector2(0.5f, 0.75f));
 
-        var statusText = CreateText(bg.transform, "Status", "Connect with your Arena Fall account to play online", 14, Color.gray,
-            new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f), new Vector2(0.5f, 0.65f));
-
-        var panel = CreatePanel(bg.transform, "LoginBox", new Color(0.1f, 0.15f, 0.25f, 0.8f),
-            new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f));
-        panel.GetComponent<RectTransform>().sizeDelta = new Vector2(380, 310);
-
-        CreateText(panel.transform, "EmailLabel", "EMAIL: user@arenafall.com", 14, Color.white,
-            new Vector2(0.5f, 0.86f), new Vector2(0.5f, 0.86f), new Vector2(0.5f, 0.86f), new Vector2(0.5f, 0.86f));
-        CreateText(panel.transform, "PassLabel", "PASSWORD: **********", 14, Color.white,
-            new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f), new Vector2(0.5f, 0.72f));
-
-        CreateMenuButton(panel.transform, "LoginButton", "LOGIN", 18, ButtonStyle.Primary,
-            new Vector2(0.28f, 0.55f), new Vector2(0.28f, 0.55f), new Vector2(0.28f, 0.55f), new Vector2(0.28f, 0.55f),
-            new Vector2(0, 0), new Vector2(140, 42), () => {
-                if (BackendClient.Instance != null)
-                {
-                    statusText.GetComponent<UnityEngine.UI.Text>().text = "Authenticating with authoritative backend...";
-                    BackendClient.Instance.Login("user@arenafall.com", "password123", (success, msg) => {
-                        if (success) SceneManager.LoadScene("MainMenu");
-                        else statusText.GetComponent<UnityEngine.UI.Text>().text = msg;
-                    });
-                }
-                else SceneManager.LoadScene("MainMenu");
-            });
-
-        CreateMenuButton(panel.transform, "RegisterButton", "REGISTER", 18, ButtonStyle.Secondary,
-            new Vector2(0.72f, 0.55f), new Vector2(0.72f, 0.55f), new Vector2(0.72f, 0.55f), new Vector2(0.72f, 0.55f),
-            new Vector2(0, 0), new Vector2(140, 42), () => {
-                if (BackendClient.Instance != null)
-                {
-                    BackendClient.Instance.Register("user@arenafall.com", "Vanguard_Soldier", "password123", (success, msg) => {
-                        if (success) SceneManager.LoadScene("MainMenu");
-                        else statusText.GetComponent<UnityEngine.UI.Text>().text = msg;
-                    });
-                }
-                else SceneManager.LoadScene("MainMenu");
-            });
-
-        CreateMenuButton(panel.transform, "GuestButton", "⚡ PLAY AS GUEST (ONLINE MOBILE)", 15, ButtonStyle.Accent,
-            new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f),
-            new Vector2(0, 0), new Vector2(320, 42), () => {
-                if (BackendClient.Instance != null)
-                {
-                    statusText.GetComponent<UnityEngine.UI.Text>().text = "Starting instant mobile guest session...";
-                    BackendClient.Instance.LoginAsGuest((success, msg) => {
-                        if (success) SceneManager.LoadScene("MainMenu");
-                        else statusText.GetComponent<UnityEngine.UI.Text>().text = msg;
-                    });
-                }
-                else SceneManager.LoadScene("MainMenu");
-            });
-
-        CreateMenuButton(panel.transform, "OfflineButton", "📴 PLAY OFFLINE (OFFLINE MODE)", 15, ButtonStyle.Tertiary,
-            new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f),
-            new Vector2(0, 0), new Vector2(320, 42), () => {
-                SceneManager.LoadScene("MainMenu");
-            });
+        CreateMenuButton(bg.transform, "GuestButton", "⚡ PLAY AS GUEST", 18, ButtonStyle.Primary, new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0.5f, 0.45f), new Vector2(0, 0), new Vector2(300, 52), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── PROFILE CAREER DASHBOARD ──────────────────────────────
-    private void BuildProfileScene(Scene scene)
-    {
-        BuildEssentialSystems(scene);
-
-        var canvas = CreateCanvas(scene, "ProfileCanvas", 0);
-        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-
-        CreateText(bg.transform, "Title", "CAREER STATS & PROGRESSION", 28, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
-
-        string playerName = BackendClient.Instance?.CachedProfile?.playerName ?? "VANGUARD-01";
-        int level = BackendClient.Instance?.CachedProfile?.level ?? 15;
-        int credits = BackendClient.Instance?.CachedProfile?.credits ?? 2450;
-
-        CreateText(bg.transform, "PlayerInfo", $"SOLDIER: {playerName} | LEVEL: {level} | CREDITS: {credits}", 20, Color.white,
-            new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f), new Vector2(0.5f, 0.8f));
-
-        string[] labels = { "WINS", "TOTAL KILLS", "DAMAGE DEALT", "K/D RATIO" };
-        string[] values = { "12", "148", "38,420", "3.24" };
-        for (int i = 0; i < 4; i++)
-        {
-            var card = CreatePanel(bg.transform, $"StatCard_{i}", new Color(0.1f, 0.15f, 0.25f, 0.6f),
-                new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.5f, 0.55f));
-            card.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 100);
-            card.GetComponent<RectTransform>().anchoredPosition = new Vector2(-270 + (i * 180), 0);
-
-            CreateText(card.transform, "Val", values[i], 32, new Color(1, 0.42f, 0.21f, 1), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f), new Vector2(0.5f, 0.6f));
-            CreateText(card.transform, "Lab", labels[i], 12, Color.gray, new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f), new Vector2(0.5f, 0.25f));
-        }
-
-        CreateMenuButton(bg.transform, "BackBtn", "← BACK TO MAIN MENU", 16, ButtonStyle.Tertiary,
-            new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f),
-            new Vector2(0, 0), new Vector2(220, 45), () => SceneManager.LoadScene("MainMenu"));
-    }
-
-    // ─── 3D CUSTOMIZATION & SKIN ROOM ──────────────────────────
     private void BuildCustomizationScene(Scene scene)
     {
-        var ground = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        ground.name = "Podium";
-        ground.transform.position = new Vector3(0, 0, 3.5f);
-        ground.transform.localScale = new Vector3(3, 0.2f, 3);
-        ground.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.1f, 0.15f, 0.25f) };
-
-        // 3D Character Rig Inspection
-        var charObj = new GameObject("InspectionCharacter");
-        charObj.transform.position = new Vector3(0, 0.1f, 3.5f);
-        charObj.transform.rotation = Quaternion.Euler(0, 180, 0);
-        SciFiCharacterAndVehicleBuilder.Build3DSciFiCharacterRig(charObj.transform, "InspectRig", true, new Color(0f, 0.83f, 1f));
-
-        // Inspection Camera
-        var camObj = new GameObject("InspectionCamera");
-        var cam = camObj.AddComponent<Camera>();
-        cam.fieldOfView = 50;
-        camObj.transform.position = new Vector3(0, 1.6f, 0);
-        camObj.AddComponent<AudioListener>();
-
-        // Light
-        var lightObj = new GameObject("PodiumLight");
-        var light = lightObj.AddComponent<Light>();
-        light.type = LightType.Spot;
-        light.color = new Color(0f, 0.83f, 1f);
-        light.intensity = 3f;
-        lightObj.transform.position = new Vector3(0, 4, 2);
-        lightObj.transform.LookAt(charObj.transform.position + new Vector3(0, 1.2f, 0));
-
         var canvas = CreateCanvas(scene, "CustomCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-
-        CreateText(canvas.transform, "Title", "3D ARMOR & COSMETIC INSPECTION", 26, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f), new Vector2(0.5f, 0.92f));
-
-        CreateMenuButton(canvas.transform, "ToggleArmor", "TOGGLE TACTICAL VEST", 16, ButtonStyle.Secondary,
-            new Vector2(0.2f, 0.5f), new Vector2(0.2f, 0.5f), new Vector2(0.2f, 0.5f), new Vector2(0.2f, 0.5f),
-            new Vector2(0, 40), new Vector2(200, 45), () => {
-                var vest = charObj.transform.Find("InspectRig/Torso/ArmorVest");
-                if (vest != null) vest.gameObject.SetActive(!vest.gameObject.activeSelf);
-            });
-
-        CreateMenuButton(canvas.transform, "ToggleBackpack", "CYCLE BACKPACK TIER", 16, ButtonStyle.Secondary,
-            new Vector2(0.2f, 0.5f), new Vector2(0.2f, 0.5f), new Vector2(0.2f, 0.5f), new Vector2(0.2f, 0.5f),
-            new Vector2(0, -20), new Vector2(200, 45), () => {
-                var bp = charObj.transform.Find("InspectRig/Torso/Backpack");
-                if (bp != null) bp.localScale = bp.localScale.x > 0.8f ? new Vector3(0.6f, 0.7f, 0.4f) : new Vector3(0.9f, 1.0f, 0.65f);
-            });
-
-        CreateMenuButton(canvas.transform, "RotateRig", "ROTATE PODIUM 90°", 16, ButtonStyle.Tertiary,
-            new Vector2(0.8f, 0.5f), new Vector2(0.8f, 0.5f), new Vector2(0.8f, 0.5f), new Vector2(0.8f, 0.5f),
-            new Vector2(0, 10), new Vector2(200, 45), () => {
-                charObj.transform.Rotate(Vector3.up, 90f);
-            });
-
-        CreateMenuButton(canvas.transform, "SaveExitBtn", "SAVE & EXIT TO MENU", 18, ButtonStyle.Primary,
-            new Vector2(0.5f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.5f, 0.1f), new Vector2(0.5f, 0.1f),
-            new Vector2(0, 0), new Vector2(220, 50), () => SceneManager.LoadScene("MainMenu"));
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
+        CreateText(bg.transform, "Title", "ARMORY & STORE", 28, HolographicCyan, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
+        CreateMenuButton(canvas.transform, "BackBtn", "← MAIN MENU", 16, ButtonStyle.Primary, new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0, 0), new Vector2(200, 45), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── 3D LOADOUT & WEAPON ARMORY ROOM ───────────────────────
     private void BuildLoadoutScene(Scene scene)
     {
-        var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        ground.name = "ArmoryFloor";
-        ground.transform.localScale = new Vector3(2, 1, 2);
-        ground.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.12f, 0.16f, 0.22f) };
-
-        var armoryObj = new GameObject("ArmoryRacks");
-        string[] weapons = { "sr25_longshot", "a17_striker", "sg20_devastator", "s9_viper" };
-        for (int i = 0; i < weapons.Length; i++)
-        {
-            float x = -3f + (i * 2f);
-            var rackObj = new GameObject($"Rack_{weapons[i]}");
-            rackObj.transform.SetParent(armoryObj.transform);
-            rackObj.transform.position = new Vector3(x, 0, 4f);
-            var stand = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            stand.transform.SetParent(rackObj.transform);
-            stand.transform.localPosition = new Vector3(0, 1f, 0);
-            stand.transform.localScale = new Vector3(1.2f, 2f, 0.6f);
-            stand.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.2f, 0.28f, 0.4f) };
-            
-            var wBox = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            wBox.transform.SetParent(rackObj.transform);
-            wBox.transform.localPosition = new Vector3(0, 2.2f, 0);
-            wBox.transform.localScale = new Vector3(1f, 0.3f, 0.2f);
-            wBox.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(1f, 0.6f, 0f) };
-        }
-
-        var camObj = new GameObject("ArmoryCamera");
-        var cam = camObj.AddComponent<Camera>();
-        cam.fieldOfView = 60;
-        camObj.transform.position = new Vector3(0, 2.5f, -1f);
-        camObj.AddComponent<AudioListener>();
-
         var canvas = CreateCanvas(scene, "LoadoutCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-
-        CreateText(canvas.transform, "Title", "TACTICAL WEAPON LOADOUT ARMORY", 28, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
-
-        CreateMenuButton(canvas.transform, "EquipSR", "EQUIP SR25 LONGSHOT (PRIMARY)", 16, ButtonStyle.Primary,
-            new Vector2(0.3f, 0.2f), new Vector2(0.3f, 0.2f), new Vector2(0.3f, 0.2f), new Vector2(0.3f, 0.2f),
-            new Vector2(0, 0), new Vector2(260, 45), () => { Debug.Log("Equipped SR25 Longshot"); });
-
-        CreateMenuButton(canvas.transform, "BackMenu", "← RETURN TO MAIN MENU", 16, ButtonStyle.Tertiary,
-            new Vector2(0.7f, 0.2f), new Vector2(0.7f, 0.2f), new Vector2(0.7f, 0.2f), new Vector2(0.7f, 0.2f),
-            new Vector2(0, 0), new Vector2(220, 45), () => SceneManager.LoadScene("MainMenu"));
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
+        CreateText(bg.transform, "Title", "ARMORY & SKINS", 28, HolographicCyan, new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f), new Vector2(0.5f, 0.9f));
+        CreateMenuButton(canvas.transform, "BackBtn", "← MAIN MENU", 16, ButtonStyle.Primary, new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0.5f, 0.15f), new Vector2(0, 0), new Vector2(200, 45), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── MATCHMAKING SEARCH SCREEN ─────────────────────────────
     private void BuildMatchmakingScene(Scene scene)
     {
-        BuildEssentialSystems(scene);
-
         var canvas = CreateCanvas(scene, "MatchmakingCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-
-        CreateText(bg.transform, "Title", "SEARCHING FOR BATTLE ROYALE MATCH...", 28, new Color(0, 0.83f, 1, 1),
-            new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f));
-
-        var statusLabel = CreateText(bg.transform, "QueueStatus", "Estimated Wait Time: 15s | Region: Africa/Lagos (Authoritative)", 16, Color.white,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        CreateMenuButton(bg.transform, "ConnectNow", "⚡ FORCE CONNECT NOW (DEV/TEST)", 18, ButtonStyle.Accent,
-            new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f), new Vector2(0.5f, 0.35f),
-            new Vector2(0, 0), new Vector2(280, 50), () => {
-                if (NetworkManagerSetup.Instance != null) NetworkManagerSetup.Instance.StartClient("127.0.0.1", 7777);
-                SceneManager.LoadScene("GameMap");
-            });
-
-        CreateMenuButton(bg.transform, "CancelSearch", "CANCEL SEARCH", 16, ButtonStyle.Danger,
-            new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f),
-            new Vector2(0, 0), new Vector2(180, 45), () => SceneManager.LoadScene("MainMenu"));
+        var bg = CreateImage(canvas.transform, "Background", new Color(0.039f, 0.086f, 0.157f, 1f), new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
+        CreateText(bg.transform, "Title", "MATCHMAKING QUEUE...", 28, HolographicCyan, new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f), new Vector2(0.5f, 0.7f));
+        CreateMenuButton(bg.transform, "CancelSearch", "CANCEL", 16, ButtonStyle.Tertiary, new Vector2(0.5f, 0.3f), new Vector2(0.5f, 0.3f), new Vector2(0.5f, 0.3f), new Vector2(0.5f, 0.3f), new Vector2(0, 0), new Vector2(180, 45), () => LoadSceneSafely("MainMenu"));
     }
 
-    // ─── REPLAY THEATER ────────────────────────────────────────
-    private void BuildReplayScene(Scene scene)
-    {
-        BuildEssentialSystems(scene);
+    private void BuildReplayScene(Scene scene) { }
 
-        var canvas = CreateCanvas(scene, "ReplayCanvas", 0);
-        canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-
-        var bg = CreateImage(canvas.transform, "Background", new Color(0.02f, 0.04f, 0.08f, 1),
-            new Vector2(0, 0), new Vector2(0, 0), new Vector2(1, 1), new Vector2(1, 1));
-
-        CreateText(bg.transform, "Title", "🎥 MATCH REPLAY THEATER & SPECTATOR CAM", 28, new Color(1, 0.42f, 0.21f, 1),
-            new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f), new Vector2(0.5f, 0.85f));
-
-        CreateText(bg.transform, "Desc", "Viewing recorded telemetry trajectory across Nexus Tower and Industrial Factory.", 16, Color.gray,
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-
-        CreateMenuButton(bg.transform, "BackBtn", "← RETURN TO MAIN MENU", 16, ButtonStyle.Tertiary,
-            new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f), new Vector2(0.5f, 0.2f),
-            new Vector2(0, 0), new Vector2(220, 45), () => SceneManager.LoadScene("MainMenu"));
-    }
-
-    // ─── ESSENTIAL SYSTEMS ──────────────────────────────────────
     private void BuildEssentialSystems(Scene scene)
     {
-        // Check if key systems exist, if not create them
         if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
         {
             var evt = new GameObject("[AUTO] EventSystem");
@@ -1317,8 +749,26 @@ public class SceneAutoBuilder : MonoBehaviour
         }
     }
 
-    // ─── HELPERS ───────────────────────────────────────────────
+    private static void LoadSceneSafely(string sceneTarget)
+    {
+        if (SceneLoader.Instance != null)
+        {
+            SceneLoader.Instance.LoadScene(sceneTarget);
+        }
+        else
+        {
+            try
+            {
+                SceneManager.LoadScene(sceneTarget);
+            }
+            catch
+            {
+                Debug.LogWarning($"[SceneAutoBuilder] Fallback scene load for '{sceneTarget}'");
+            }
+        }
+    }
 
+    // ─── HELPERS ───────────────────────────────────────────────
     private GameObject CreateCanvas(Scene scene, string name, int sortOrder)
     {
         if (Camera.main == null && FindObjectOfType<Camera>() == null)
@@ -1348,31 +798,10 @@ public class SceneAutoBuilder : MonoBehaviour
     {
         var obj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
         var image = obj.AddComponent<Image>();
-        
-        // Modern Free Fire Panel Aesthetic:
-        // Instead of plain flat colors, use a sleek steel grey outline with semi-transparent charcoal body
-        if (color.a > 0.1f && !name.Contains("Bar") && !name.Contains("Panel"))
-        {
-            image.color = new Color(0.25f, 0.28f, 0.35f, 0.5f); // Steel grey outline
-            
-            var inner = new GameObject("PanelBody", typeof(RectTransform), typeof(CanvasRenderer));
-            inner.transform.SetParent(obj.transform, false);
-            var irt = inner.GetComponent<RectTransform>();
-            irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
-            irt.offsetMin = new Vector2(1f, 1f); irt.offsetMax = new Vector2(-1f, -1f);
-            var iImg = inner.AddComponent<Image>();
-            iImg.color = new Color(0.06f, 0.08f, 0.11f, color.a * 0.95f); // Deep charcoal body
-        }
-        else
-        {
-            image.color = color;
-        }
-
+        image.color = color;
         var rt = obj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.pivot = pivot;
+        rt.anchorMin = anchorMin; rt.anchorMax = anchorMax; rt.pivot = pivot;
         rt.sizeDelta = Vector2.zero;
         return obj;
     }
@@ -1385,45 +814,9 @@ public class SceneAutoBuilder : MonoBehaviour
         image.color = color;
         var rt = obj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.pivot = pivot;
+        rt.anchorMin = anchorMin; rt.anchorMax = anchorMax; rt.pivot = pivot;
         rt.sizeDelta = Vector2.zero;
-        
-        // AUTO-LOAD YOUR AI ART: Try to find a matching sprite in Resources
-        TryLoadArtSprite(image, name);
-        
         return obj;
-    }
-    
-    /// <summary>
-    /// Attempts to load your AI-generated art from Resources by matching the image name.
-    /// Looks in: Resources/Art/, Resources/UI/Sprites/, Resources/UI/Icons/
-    /// Falls back to the solid color if no art is found.
-    /// </summary>
-    private void TryLoadArtSprite(Image image, string assetName)
-    {
-        // Map common UI names to your actual AI art filenames
-        string artPath = assetName switch
-        {
-            "Logo" => "UI/Sprites/arena_fall_logo",
-            "SplashBG" => "UI/Sprites/splash_screen",
-            "MinimapBorder" => "UI/Sprites/modern_br_hud",
-            "BGEffects" or "Background" => "Art/Environment/skybox_concept",
-            "Crosshair" => "UI/Sprites/crosshairs",
-            _ => null
-        };
-        
-        if (artPath == null) return;
-        
-        var tex = Resources.Load<Texture2D>(artPath);
-        if (tex != null)
-        {
-            image.sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-            image.type = Image.Type.Sliced;
-            image.color = Color.white;
-            Debug.Log($"[SceneAutoBuilder] Loaded art: {artPath}");
-        }
     }
 
     private GameObject CreateText(Transform parent, string name, string text, int fontSize, Color color,
@@ -1439,10 +832,8 @@ public class SceneAutoBuilder : MonoBehaviour
         
         var rt = obj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
-        rt.anchorMin = anchorMin;
-        rt.anchorMax = anchorMax;
-        rt.pivot = pivot;
-        rt.sizeDelta = new Vector2(200, 30);
+        rt.anchorMin = anchorMin; rt.anchorMax = anchorMax; rt.pivot = pivot;
+        rt.sizeDelta = new Vector2(250, 32);
         return obj;
     }
 
@@ -1452,7 +843,6 @@ public class SceneAutoBuilder : MonoBehaviour
         ButtonStyle style, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivotMin, Vector2 pivotMax,
         Vector2 position, Vector2 size, UnityEngine.Events.UnityAction onClick)
     {
-        // 1. Root Button Container (Acts as the outer border / outline frame)
         var buttonObj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
         var button = buttonObj.AddComponent<Button>();
         var rt = buttonObj.GetComponent<RectTransform>();
@@ -1462,76 +852,44 @@ public class SceneAutoBuilder : MonoBehaviour
 
         var outerImage = buttonObj.AddComponent<Image>();
         
-        // Setup beveled/sliced sprite if available
-        var uiBtnTex = Resources.Load<Texture2D>("UI/Sprites/ui_buttons");
-        if (uiBtnTex != null)
-        {
-            outerImage.sprite = Sprite.Create(uiBtnTex, new Rect(0, 0, uiBtnTex.width, uiBtnTex.height), new Vector2(0.5f, 0.5f), 100f, 1, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
-            outerImage.type = Image.Type.Sliced;
-        }
-
-        // Define mature, military-style Free Fire tactical color palettes
-        Color outerBorderColor = new Color(0.25f, 0.28f, 0.35f, 0.6f); // Steel grey outline
-        Color innerBodyColor = new Color(0.06f, 0.08f, 0.12f, 0.94f);   // Sleek carbon black
+        Color outerBorderColor = HolographicCyan;
+        Color innerBodyColor = SteelBlueCard;
         Color textColor = Color.white;
-        Color accentBraceColor = new Color(0f, 0.83f, 1f, 1f);        // Cyan laser accent
+        Color accentBraceColor = HolographicCyan;
 
-        if (style == ButtonStyle.Primary) // Free Fire iconic "START" button
+        if (style == ButtonStyle.Primary) // Neon Orange Primary CTA
         {
-            outerBorderColor = new Color(0.95f, 0.61f, 0.07f, 0.85f); // Rich Gold outline
-            innerBodyColor = new Color(0.12f, 0.08f, 0.06f, 0.94f);  // Matte copper charcoal body
-            textColor = new Color(0.95f, 0.61f, 0.07f, 1.0f);       // Bright high-contrast gold text
-            accentBraceColor = new Color(0.95f, 0.61f, 0.07f, 1f);    // Gold glowing side braces
+            outerBorderColor = NeonOrangeAccent;
+            innerBodyColor = NeonOrangeAccent;
+            textColor = Color.white;
+            accentBraceColor = Color.white;
         }
-        else if (style == ButtonStyle.Accent)
+        else if (style == ButtonStyle.Secondary)
         {
-            outerBorderColor = new Color(0f, 0.83f, 1f, 0.6f);
-            innerBodyColor = new Color(0.04f, 0.15f, 0.24f, 0.95f);   // Dark navy blue
-            textColor = new Color(0f, 0.9f, 1f, 1f);                 // Cyan laser text
-            accentBraceColor = new Color(0f, 0.83f, 1f, 1f);
+            outerBorderColor = new Color(0f, 0.831f, 1f, 0.4f);
+            innerBodyColor = DeepNavyBg;
+            textColor = new Color(0.9f, 0.95f, 1f, 1f);
+            accentBraceColor = HolographicCyan;
         }
-        else if (style == ButtonStyle.Danger)
+        else if (style == ButtonStyle.Tertiary)
         {
-            outerBorderColor = new Color(1f, 0.15f, 0.25f, 0.6f);
-            innerBodyColor = new Color(0.18f, 0.04f, 0.06f, 0.95f);   // Dark blood red
-            textColor = new Color(1f, 0.4f, 0.45f, 1f);
-            accentBraceColor = new Color(1f, 0.15f, 0.25f, 1f);
-        }
-        else if (style == ButtonStyle.Secondary) // Medium/Mode buttons
-        {
-            outerBorderColor = new Color(0.7f, 0.72f, 0.78f, 0.4f);
-            innerBodyColor = new Color(0.08f, 0.1f, 0.14f, 0.92f);    // Steel slate grey
-            textColor = new Color(0.85f, 0.88f, 0.95f, 1f);
-            accentBraceColor = new Color(0.7f, 0.72f, 0.78f, 0.8f);
-        }
-        else if (style == ButtonStyle.Tertiary) // Settings / Armory
-        {
-            outerBorderColor = new Color(0.35f, 0.4f, 0.48f, 0.35f);
-            innerBodyColor = new Color(0.04f, 0.05f, 0.07f, 0.88f);   // Matte black
-            textColor = new Color(0.7f, 0.75f, 0.85f, 1f);
-            accentBraceColor = new Color(0.35f, 0.4f, 0.48f, 0.6f);
+            outerBorderColor = new Color(0.2f, 0.35f, 0.5f, 0.5f);
+            innerBodyColor = new Color(0.04f, 0.08f, 0.14f, 0.9f);
+            textColor = new Color(0.7f, 0.82f, 0.95f, 1f);
+            accentBraceColor = HolographicCyan;
         }
 
         outerImage.color = outerBorderColor;
 
-        // 2. Inner Chassis (Offsets of 1.5 pixels to create a razor-sharp tactical outline)
         var innerObj = new GameObject("InnerChassis", typeof(RectTransform), typeof(CanvasRenderer));
         innerObj.transform.SetParent(buttonObj.transform, false);
         var innerRt = innerObj.GetComponent<RectTransform>();
-        innerRt.anchorMin = Vector2.zero;
-        innerRt.anchorMax = Vector2.one;
-        innerRt.offsetMin = new Vector2(1.5f, 1.5f);
-        innerRt.offsetMax = new Vector2(-1.5f, -1.5f);
+        innerRt.anchorMin = Vector2.zero; innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(2f, 2f); innerRt.offsetMax = new Vector2(-2f, -2f);
         
         var innerImage = innerObj.AddComponent<Image>();
-        if (uiBtnTex != null)
-        {
-            innerImage.sprite = Sprite.Create(uiBtnTex, new Rect(0, 0, uiBtnTex.width, uiBtnTex.height), new Vector2(0.5f, 0.5f), 100f, 1, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
-            innerImage.type = Image.Type.Sliced;
-        }
         innerImage.color = innerBodyColor;
 
-        // 3. Left Laser Accent Brace (Free Fire futuristic look)
         var leftBrace = new GameObject("LeftBrace", typeof(RectTransform), typeof(CanvasRenderer));
         leftBrace.transform.SetParent(innerObj.transform, false);
         var lRt = leftBrace.GetComponent<RectTransform>();
@@ -1541,7 +899,6 @@ public class SceneAutoBuilder : MonoBehaviour
         var lImg = leftBrace.AddComponent<Image>();
         lImg.color = accentBraceColor;
 
-        // 4. Right Laser Accent Brace (Mirror on the right side)
         var rightBrace = new GameObject("RightBrace", typeof(RectTransform), typeof(CanvasRenderer));
         rightBrace.transform.SetParent(innerObj.transform, false);
         var rRt = rightBrace.GetComponent<RectTransform>();
@@ -1551,105 +908,33 @@ public class SceneAutoBuilder : MonoBehaviour
         var rImg = rightBrace.AddComponent<Image>();
         rImg.color = accentBraceColor;
 
-        // 5. Tactical Uppercase Bold Text
         var textObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer));
         var tmp = textObj.AddComponent<UnityEngine.UI.Text>();
         tmp.raycastTarget = false;
-        tmp.text = label.ToUpper(); // Force uppercase for militaristic/mature look!
+        tmp.text = label.ToUpper();
         tmp.fontSize = fontSize;
         tmp.color = textColor;
+        tmp.fontStyle = FontStyle.Bold;
         tmp.alignment = TextAnchor.MiddleCenter;
         tmp.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent || style == ButtonStyle.Secondary) 
-            tmp.fontStyle = FontStyle.Bold;
-            
+
         var trt = textObj.GetComponent<RectTransform>();
         trt.SetParent(innerObj.transform, false);
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-        trt.offsetMin = new Vector2(12, 0); trt.offsetMax = new Vector2(-12, 0);
+        trt.offsetMin = Vector2.zero; trt.offsetMax = Vector2.zero;
 
         if (onClick != null) button.onClick.AddListener(onClick);
 
-        // 6. Hook our lightweight mobile-responsive helper
         var tactile = buttonObj.AddComponent<TactileButton>();
-        tactile.neonStrip = lImg; // Scale left brace
-        tactile.rightBrace = rImg; // Scale right brace
+        tactile.neonStrip = lImg;
+        tactile.rightBrace = rImg;
         tactile.neonColor = accentBraceColor;
-    }
-
-    private void CreateSettingsSlider(Transform parent, string name, string label, float defaultValue, int index, Vector2 position)
-    {
-        var panel = CreatePanel(parent, name + "Panel", new Color(0, 0, 0, 0),
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f));
-        var prt = panel.GetComponent<RectTransform>();
-        prt.sizeDelta = new Vector2(500, 40);
-        prt.anchoredPosition = position;
-
-        CreateText(panel.transform, "Label", label, 16, Color.white,
-            new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(0, 0.5f));
-
-        var sliderObj = new GameObject("Slider", typeof(RectTransform), typeof(CanvasRenderer));
-        var slider = sliderObj.AddComponent<Slider>();
-        var srt = sliderObj.GetComponent<RectTransform>();
-        srt.SetParent(panel.transform, false);
-        srt.anchorMin = new Vector2(1, 0.5f);
-        srt.anchorMax = new Vector2(1, 0.5f);
-        srt.pivot = new Vector2(1, 0.5f);
-        srt.anchoredPosition = new Vector2(-10, 0);
-        srt.sizeDelta = new Vector2(250, 20);
-
-        slider.minValue = 0;
-        slider.maxValue = 1;
-        slider.value = defaultValue;
-        slider.direction = Slider.Direction.LeftToRight;
-
-        // Background
-        var bgImage = new GameObject("Background", typeof(RectTransform), typeof(CanvasRenderer));
-        var bgImgComp = bgImage.AddComponent<Image>();
-        bgImgComp.color = new Color(0.15f, 0.15f, 0.15f, 0.5f);
-        var brt = bgImage.GetComponent<RectTransform>();
-        brt.SetParent(sliderObj.transform, false);
-        brt.anchorMin = Vector2.zero;
-        brt.anchorMax = Vector2.one;
-        brt.sizeDelta = new Vector2(0, 6);
-        slider.targetGraphic = bgImgComp;
-
-        // Fill
-        var fillImage = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer));
-        var fillImgComp = fillImage.AddComponent<Image>();
-        fillImgComp.color = new Color(0, 0.83f, 1, 1);
-        var frt = fillImage.GetComponent<RectTransform>();
-        frt.SetParent(sliderObj.transform, false);
-        frt.anchorMin = new Vector2(0, 0);
-        frt.anchorMax = new Vector2(0, 1);
-        frt.sizeDelta = new Vector2(0, 6);
-        slider.fillRect = frt;
-
-        // Handle
-        var handleImage = new GameObject("Handle", typeof(RectTransform), typeof(CanvasRenderer));
-        var handleImgComp = handleImage.AddComponent<Image>();
-        handleImgComp.color = new Color(1, 0.42f, 0.21f, 1);
-        var hrt = handleImage.GetComponent<RectTransform>();
-        hrt.SetParent(sliderObj.transform, false);
-        hrt.sizeDelta = new Vector2(16, 16);
-        slider.handleRect = hrt;
     }
 
     private void EnsureCoreManagersExist()
     {
         if (FindObjectOfType<BackendClient>() != null) return;
 
-        // Destroy any rogue, non-functional local GameManagers to avoid initialization conflicts
-        var rogueGMs = FindObjectsOfType<GameManager>();
-        foreach (var r in rogueGMs)
-        {
-            if (r.gameObject.name != "[AUTO] GameManager")
-            {
-                DestroyImmediate(r.gameObject);
-            }
-        }
-
-        Debug.Log("[SceneAutoBuilder] Bootstrapping core managers...");
         var gameManager = new GameObject("[AUTO] GameManager");
         DontDestroyOnLoad(gameManager);
         
@@ -1670,99 +955,5 @@ public class SceneAutoBuilder : MonoBehaviour
         gameManager.AddComponent<SafeZone>();
         gameManager.AddComponent<BackendClient>();
         gameManager.AddComponent<NetworkManagerSetup>();
-    }
-}
-
-/// <summary>
-/// Auto-loader to transition scenes after a delay
-/// </summary>
-public class AutoSceneLoader : MonoBehaviour
-{
-    public string sceneName = "MainMenu";
-    public float delay = 2f;
-    private float _timer;
-
-    private void Start()
-    {
-        _timer = delay;
-    }
-
-    private void Update()
-    {
-        _timer -= Time.deltaTime;
-        if (_timer <= 0)
-        {
-            SceneManager.LoadScene(sceneName);
-        }
-    }
-}
-
-/// <summary>
-/// Simple rotation animation for target dummies
-/// </summary>
-public class RotateAnimation : MonoBehaviour
-{
-    private void Update()
-    {
-        transform.Rotate(Vector3.up, 30 * Time.deltaTime);
-    }
-}
-
-/// <summary>
-/// Floating animation for loot items so they're visible
-/// </summary>
-public class LootFloatAnimation : MonoBehaviour
-{
-    private Vector3 _startPos;
-    private float _offset;
-
-    private void Start()
-    {
-        _startPos = transform.position;
-        _offset = Random.Range(0, 6.28f);
-    }
-
-    private void Update()
-    {
-        float y = Mathf.Sin(Time.time * 1.5f + _offset) * 0.3f;
-        transform.position = new Vector3(_startPos.x, _startPos.y + y, _startPos.z);
-        transform.Rotate(Vector3.up, 45 * Time.deltaTime);
-    }
-}
-
-/// <summary>
-/// Keeps a quad facing the camera — your AI art always visible!
-/// </summary>
-public class BillboardToCamera : MonoBehaviour
-{
-    private void LateUpdate()
-    {
-        if (Camera.main != null)
-            transform.LookAt(Camera.main.transform);
-    }
-}
-
-/// <summary>
-/// Handles press animations and prevents interception of standard mobile clicks!
-/// </summary>
-public class TactileButton : MonoBehaviour, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler
-{
-    public Vector3 pressScale = new Vector3(0.96f, 0.96f, 1f);
-    public Image neonStrip;
-    public Image rightBrace;
-    public Color neonColor;
-
-    public void OnPointerDown(UnityEngine.EventSystems.PointerEventData eventData)
-    {
-        transform.localScale = pressScale;
-        if (neonStrip != null) neonStrip.color = Color.white;
-        if (rightBrace != null) rightBrace.color = Color.white;
-    }
-
-    public void OnPointerUp(UnityEngine.EventSystems.PointerEventData eventData)
-    {
-        transform.localScale = Vector3.one;
-        if (neonStrip != null) neonStrip.color = neonColor;
-        if (rightBrace != null) rightBrace.color = neonColor;
     }
 }
