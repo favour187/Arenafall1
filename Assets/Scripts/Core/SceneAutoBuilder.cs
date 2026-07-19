@@ -1734,17 +1734,20 @@ public class TactileButton : MonoBehaviour, UnityEngine.EventSystems.IPointerDow
 {
     public Vector3 pressScale = new Vector3(0.96f, 0.96f, 1f);
     public Image neonStrip;
+    public Image rightBrace;
     public Color neonColor;
 
     public void OnPointerDown(UnityEngine.EventSystems.PointerEventData eventData)
     {
         transform.localScale = pressScale;
         if (neonStrip != null) neonStrip.color = Color.white;
+        if (rightBrace != null) rightBrace.color = Color.white;
     }
 
     public void OnPointerUp(UnityEngine.EventSystems.PointerEventData eventData)
     {
         transform.localScale = Vector3.one;
         if (neonStrip != null) neonStrip.color = neonColor;
+        if (rightBrace != null) rightBrace.color = neonColor;
     }
 }
