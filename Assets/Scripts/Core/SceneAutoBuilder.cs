@@ -215,6 +215,7 @@ public class SceneAutoBuilder : MonoBehaviour
     private void BuildMainMenuScene(Scene scene)
     {
         BuildEssentialSystems(scene);
+        EnsureCoreManagersExist();
         
         var canvas = CreateCanvas(scene, "MainMenuCanvas", 0);
         canvas.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
@@ -1011,6 +1012,7 @@ public class SceneAutoBuilder : MonoBehaviour
     private void BuildLoginScene(Scene scene)
     {
         BuildEssentialSystems(scene);
+        EnsureCoreManagersExist();
 
         if (BackendClient.Instance != null && BackendClient.Instance.IsAuthenticated)
         {
@@ -1487,27 +1489,9 @@ public class SceneAutoBuilder : MonoBehaviour
         if (onClick != null) button.onClick.AddListener(onClick);
 
         // Modern Tactile Scaling & Glow Animations
-        var trigger = buttonObj.AddComponent<UnityEngine.EventSystems.EventTrigger>();
-        
-        var click = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerClick };
-        click.callback.AddListener(_ => onClick?.Invoke());
-        trigger.triggers.Add(click);
-
-        var enter = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerEnter };
-        enter.callback.AddListener(_ => { buttonObj.transform.localScale = new Vector3(1.04f, 1.04f, 1f); nImg.color = Color.white; });
-        trigger.triggers.Add(enter);
-
-        var exit = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerExit };
-        exit.callback.AddListener(_ => { buttonObj.transform.localScale = Vector3.one; nImg.color = neonColor; });
-        trigger.triggers.Add(exit);
-
-        var down = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerDown };
-        down.callback.AddListener(_ => buttonObj.transform.localScale = new Vector3(0.96f, 0.96f, 1f));
-        trigger.triggers.Add(down);
-
-        var up = new UnityEngine.EventSystems.EventTrigger.Entry { eventID = UnityEngine.EventSystems.EventTriggerType.PointerUp };
-        up.callback.AddListener(_ => buttonObj.transform.localScale = new Vector3(1.02f, 1.02f, 1f));
-        trigger.triggers.Add(up);
+        var tactile = buttonObj.AddComponent<TactileButton>();
+        tactile.neonStrip = nImg;
+        tactile.neonColor = neonColor;
     }
 
     private void CreateSettingsSlider(Transform parent, string name, string label, float defaultValue, int index, Vector2 position)
@@ -1568,16 +1552,31 @@ public class SceneAutoBuilder : MonoBehaviour
         slider.handleRect = hrt;
     }
 
-    private Color RandomColor()
+    private void EnsureCoreManagersExist()
     {
-        Color[] colors = {
-            new Color(1, 0.42f, 0.21f), // Orange
-            new Color(0, 0.83f, 1),     // Cyan
-            new Color(0.27f, 0.85f, 0.27f), // Green
-            new Color(0.8f, 0.3f, 0.8f), // Purple
-            new Color(1, 0.7f, 0)       // Gold
-        };
-        return colors[Random.Range(0, colors.Length)];
+        if (FindObjectOfType<GameManager>() != null) return;
+
+        Debug.Log("[SceneAutoBuilder] GameManager not found! Bootstrapping core managers...");
+        var gameManager = new GameObject("[AUTO] GameManager");
+        DontDestroyOnLoad(gameManager);
+        
+        gameManager.AddComponent<GameManager>();
+        gameManager.AddComponent<SaveManager>();
+        gameManager.AddComponent<AudioManager>();
+        gameManager.AddComponent<InputManager>();
+        gameManager.AddComponent<CameraManager>();
+        gameManager.AddComponent<SceneLoader>();
+        gameManager.AddComponent<PoolManager>();
+        gameManager.AddComponent<GameStateManager>();
+        gameManager.AddComponent<SettingsManager>();
+        gameManager.AddComponent<MatchManager>();
+        gameManager.AddComponent<LootManager>();
+        gameManager.AddComponent<ProgressionManager>();
+        gameManager.AddComponent<LocalizationManager>();
+        gameManager.AddComponent<AnalyticsManager>();
+        gameManager.AddComponent<SafeZone>();
+        gameManager.AddComponent<BackendClient>();
+        gameManager.AddComponent<NetworkManagerSetup>();
     }
 }
 
@@ -1647,5 +1646,27 @@ public class BillboardToCamera : MonoBehaviour
     {
         if (Camera.main != null)
             transform.LookAt(Camera.main.transform);
+    }
+}
+
+/// <summary>
+/// Handles press animations and prevents interception of standard mobile clicks!
+/// </summary>
+public class TactileButton : MonoBehaviour, UnityEngine.EventSystems.IPointerDownHandler, UnityEngine.EventSystems.IPointerUpHandler
+{
+    public Vector3 pressScale = new Vector3(0.96f, 0.96f, 1f);
+    public Image neonStrip;
+    public Color neonColor;
+
+    public void OnPointerDown(UnityEngine.EventSystems.PointerEventData eventData)
+    {
+        transform.localScale = pressScale;
+        if (neonStrip != null) neonStrip.color = Color.white;
+    }
+
+    public void OnPointerUp(UnityEngine.EventSystems.PointerEventData eventData)
+    {
+        transform.localScale = Vector3.one;
+        if (neonStrip != null) neonStrip.color = neonColor;
     }
 }
