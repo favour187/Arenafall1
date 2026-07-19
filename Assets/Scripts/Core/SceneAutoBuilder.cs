@@ -1343,7 +1343,26 @@ public class SceneAutoBuilder : MonoBehaviour
     {
         var obj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
         var image = obj.AddComponent<Image>();
-        image.color = color;
+        
+        // Modern Free Fire Panel Aesthetic:
+        // Instead of plain flat colors, use a sleek steel grey outline with semi-transparent charcoal body
+        if (color.a > 0.1f && !name.Contains("Bar") && !name.Contains("Panel"))
+        {
+            image.color = new Color(0.25f, 0.28f, 0.35f, 0.5f); // Steel grey outline
+            
+            var inner = new GameObject("PanelBody", typeof(RectTransform), typeof(CanvasRenderer));
+            inner.transform.SetParent(obj.transform, false);
+            var irt = inner.GetComponent<RectTransform>();
+            irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
+            irt.offsetMin = new Vector2(1f, 1f); irt.offsetMax = new Vector2(-1f, -1f);
+            var iImg = inner.AddComponent<Image>();
+            iImg.color = new Color(0.06f, 0.08f, 0.11f, color.a * 0.95f); // Deep charcoal body
+        }
+        else
+        {
+            image.color = color;
+        }
+
         var rt = obj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
         rt.anchorMin = anchorMin;
@@ -1428,70 +1447,129 @@ public class SceneAutoBuilder : MonoBehaviour
         ButtonStyle style, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivotMin, Vector2 pivotMax,
         Vector2 position, Vector2 size, UnityEngine.Events.UnityAction onClick)
     {
+        // 1. Root Button Container (Acts as the outer border / outline frame)
         var buttonObj = new GameObject($"[AUTO] {name}", typeof(RectTransform), typeof(CanvasRenderer));
-        var image = buttonObj.AddComponent<Image>();
         var button = buttonObj.AddComponent<Button>();
         var rt = buttonObj.GetComponent<RectTransform>();
         rt.SetParent(parent, false);
         rt.anchorMin = anchorMin; rt.anchorMax = anchorMax; rt.pivot = pivotMin;
         rt.anchoredPosition = position; rt.sizeDelta = size;
 
-        // Try loading modern beveled button sprite
+        var outerImage = buttonObj.AddComponent<Image>();
+        
+        // Setup beveled/sliced sprite if available
         var uiBtnTex = Resources.Load<Texture2D>("UI/Sprites/ui_buttons");
         if (uiBtnTex != null)
         {
-            image.sprite = Sprite.Create(uiBtnTex, new Rect(0, 0, uiBtnTex.width, uiBtnTex.height), new Vector2(0.5f, 0.5f), 100f, 1, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
-            image.type = Image.Type.Sliced;
+            outerImage.sprite = Sprite.Create(uiBtnTex, new Rect(0, 0, uiBtnTex.width, uiBtnTex.height), new Vector2(0.5f, 0.5f), 100f, 1, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
+            outerImage.type = Image.Type.Sliced;
         }
 
-        Color baseBg = new Color(0.06f, 0.12f, 0.22f, 0.94f);
-        Color neonColor = new Color(0f, 0.83f, 1f, 1f);
-        switch (style)
+        // Define mature, military-style Free Fire tactical color palettes
+        Color outerBorderColor = new Color(0.25f, 0.28f, 0.35f, 0.6f); // Steel grey outline
+        Color innerBodyColor = new Color(0.06f, 0.08f, 0.12f, 0.94f);   // Sleek carbon black
+        Color textColor = Color.white;
+        Color accentBraceColor = new Color(0f, 0.83f, 1f, 1f);        // Cyan laser accent
+
+        if (style == ButtonStyle.Primary) // Free Fire iconic "START" button
         {
-            case ButtonStyle.Primary:
-                baseBg = new Color(0.18f, 0.08f, 0.05f, 0.95f);
-                neonColor = new Color(1f, 0.42f, 0.21f, 1f);
-                break;
-            case ButtonStyle.Accent:
-                baseBg = new Color(0.04f, 0.18f, 0.26f, 0.95f);
-                neonColor = new Color(0f, 0.83f, 1f, 1f);
-                break;
-            case ButtonStyle.Danger:
-                baseBg = new Color(0.24f, 0.05f, 0.08f, 0.95f);
-                neonColor = new Color(1f, 0.14f, 0.27f, 1f);
-                break;
+            outerBorderColor = new Color(0.95f, 0.76f, 0.12f, 0.85f); // Gold outline
+            innerBodyColor = new Color(0.95f, 0.61f, 0.07f, 1f);      // Bright Free Fire Gold/Amber
+            textColor = new Color(0.04f, 0.05f, 0.07f, 1f);          // Deep charcoal text for high contrast
+            accentBraceColor = new Color(1f, 0.3f, 0f, 1f);           // Vibrant orange accents
         }
-        image.color = baseBg;
+        else if (style == ButtonStyle.Accent)
+        {
+            outerBorderColor = new Color(0f, 0.83f, 1f, 0.6f);
+            innerBodyColor = new Color(0.04f, 0.15f, 0.24f, 0.95f);   // Dark navy blue
+            textColor = new Color(0f, 0.9f, 1f, 1f);                 // Cyan laser text
+            accentBraceColor = new Color(0f, 0.83f, 1f, 1f);
+        }
+        else if (style == ButtonStyle.Danger)
+        {
+            outerBorderColor = new Color(1f, 0.15f, 0.25f, 0.6f);
+            innerBodyColor = new Color(0.18f, 0.04f, 0.06f, 0.95f);   // Dark blood red
+            textColor = new Color(1f, 0.4f, 0.45f, 1f);
+            accentBraceColor = new Color(1f, 0.15f, 0.25f, 1f);
+        }
+        else if (style == ButtonStyle.Secondary) // Medium/Mode buttons
+        {
+            outerBorderColor = new Color(0.7f, 0.72f, 0.78f, 0.4f);
+            innerBodyColor = new Color(0.08f, 0.1f, 0.14f, 0.92f);    // Steel slate grey
+            textColor = new Color(0.85f, 0.88f, 0.95f, 1f);
+            accentBraceColor = new Color(0.7f, 0.72f, 0.78f, 0.8f);
+        }
+        else if (style == ButtonStyle.Tertiary) // Settings / Armory
+        {
+            outerBorderColor = new Color(0.35f, 0.4f, 0.48f, 0.35f);
+            innerBodyColor = new Color(0.04f, 0.05f, 0.07f, 0.88f);   // Matte black
+            textColor = new Color(0.7f, 0.75f, 0.85f, 1f);
+            accentBraceColor = new Color(0.35f, 0.4f, 0.48f, 0.6f);
+        }
 
-        // Glowing Neon Side Bar (Left Edge)
-        var neonObj = new GameObject("SideNeonStrip", typeof(RectTransform), typeof(CanvasRenderer));
-        neonObj.transform.SetParent(buttonObj.transform, false);
-        var nRt = neonObj.GetComponent<RectTransform>();
-        nRt.anchorMin = new Vector2(0, 0); nRt.anchorMax = new Vector2(0, 1);
-        nRt.offsetMin = Vector2.zero; nRt.offsetMax = Vector2.zero;
-        nRt.sizeDelta = new Vector2(5, 0); nRt.anchoredPosition = new Vector2(2.5f, 0);
-        var nImg = neonObj.AddComponent<Image>();
-        nImg.color = neonColor;
+        outerImage.color = outerBorderColor;
 
-        // Text
+        // 2. Inner Chassis (Offsets of 1.5 pixels to create a razor-sharp tactical outline)
+        var innerObj = new GameObject("InnerChassis", typeof(RectTransform), typeof(CanvasRenderer));
+        innerObj.transform.SetParent(buttonObj.transform, false);
+        var innerRt = innerObj.GetComponent<RectTransform>();
+        innerRt.anchorMin = Vector2.zero;
+        innerRt.anchorMax = Vector2.one;
+        innerRt.offsetMin = new Vector2(1.5f, 1.5f);
+        innerRt.offsetMax = new Vector2(-1.5f, -1.5f);
+        
+        var innerImage = innerObj.AddComponent<Image>();
+        if (uiBtnTex != null)
+        {
+            innerImage.sprite = Sprite.Create(uiBtnTex, new Rect(0, 0, uiBtnTex.width, uiBtnTex.height), new Vector2(0.5f, 0.5f), 100f, 1, SpriteMeshType.FullRect, new Vector4(12, 12, 12, 12));
+            innerImage.type = Image.Type.Sliced;
+        }
+        innerImage.color = innerBodyColor;
+
+        // 3. Left Laser Accent Brace (Free Fire futuristic look)
+        var leftBrace = new GameObject("LeftBrace", typeof(RectTransform), typeof(CanvasRenderer));
+        leftBrace.transform.SetParent(innerObj.transform, false);
+        var lRt = leftBrace.GetComponent<RectTransform>();
+        lRt.anchorMin = new Vector2(0, 0); lRt.anchorMax = new Vector2(0, 1);
+        lRt.offsetMin = Vector2.zero; lRt.offsetMax = Vector2.zero;
+        lRt.sizeDelta = new Vector2(4, 0); lRt.anchoredPosition = new Vector2(2f, 0);
+        var lImg = leftBrace.AddComponent<Image>();
+        lImg.color = accentBraceColor;
+
+        // 4. Right Laser Accent Brace (Mirror on the right side)
+        var rightBrace = new GameObject("RightBrace", typeof(RectTransform), typeof(CanvasRenderer));
+        rightBrace.transform.SetParent(innerObj.transform, false);
+        var rRt = rightBrace.GetComponent<RectTransform>();
+        rRt.anchorMin = new Vector2(1, 0); rRt.anchorMax = new Vector2(1, 1);
+        rRt.offsetMin = Vector2.zero; rRt.offsetMax = Vector2.zero;
+        rRt.sizeDelta = new Vector2(4, 0); rRt.anchoredPosition = new Vector2(-2f, 0);
+        var rImg = rightBrace.AddComponent<Image>();
+        rImg.color = accentBraceColor;
+
+        // 5. Tactical Uppercase Bold Text
         var textObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer));
         var tmp = textObj.AddComponent<UnityEngine.UI.Text>();
         tmp.raycastTarget = false;
-        tmp.text = label; tmp.fontSize = fontSize; tmp.color = Color.white;
+        tmp.text = label.ToUpper(); // Force uppercase for militaristic/mature look!
+        tmp.fontSize = fontSize;
+        tmp.color = textColor;
         tmp.alignment = TextAnchor.MiddleCenter;
         tmp.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent) tmp.fontStyle = FontStyle.Bold;
+        if (style == ButtonStyle.Primary || style == ButtonStyle.Accent || style == ButtonStyle.Secondary) 
+            tmp.fontStyle = FontStyle.Bold;
+            
         var trt = textObj.GetComponent<RectTransform>();
-        trt.SetParent(buttonObj.transform, false);
+        trt.SetParent(innerObj.transform, false);
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-        trt.sizeDelta = new Vector2(-12, 0); trt.anchoredPosition = new Vector2(4, 0);
+        trt.offsetMin = new Vector2(12, 0); trt.offsetMax = new Vector2(-12, 0);
 
         if (onClick != null) button.onClick.AddListener(onClick);
 
-        // Modern Tactile Scaling & Glow Animations
+        // 6. Hook our lightweight mobile-responsive helper
         var tactile = buttonObj.AddComponent<TactileButton>();
-        tactile.neonStrip = nImg;
-        tactile.neonColor = neonColor;
+        tactile.neonStrip = lImg; // Scale left brace
+        tactile.rightBrace = rImg; // Scale right brace
+        tactile.neonColor = accentBraceColor;
     }
 
     private void CreateSettingsSlider(Transform parent, string name, string label, float defaultValue, int index, Vector2 position)
